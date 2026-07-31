@@ -113,6 +113,26 @@ export async function resolveLeagueByHostname(hostname: string): Promise<Current
  */
 export const getCurrentLeague = cache(async (): Promise<CurrentLeague | null> => {
   const headerList = await headers();
-  const host = headerList.get('x-league-host') ?? headerList.get('host') ?? '';
-  return resolveLeagueByHostname(host);
+
+  /**
+   * Reads `Host` ONLY — never `x-league-host`.
+   *
+   * An earlier version preferred `x-league-host`, which middleware sets after
+   * normalising. That made a *request header* authoritative for tenant
+   * selection, and middleware is not guaranteed to run: its matcher excludes
+   * any path ending in an image extension, so `GET /clubs/anything.png` skips
+   * sanitisation entirely and a client-supplied `x-league-host` would arrive
+   * untouched. Since the resolved league seeds `app.current_org_id`, and every
+   * RLS policy compares against that, a crafted header would have selected
+   * which league's rows the database returned.
+   *
+   * It was not reachable — only `/` resolves a league today, and `/` does run
+   * middleware — but the next route taking a slug would have made it live.
+   *
+   * The header is now simply unnecessary: `resolveLeagueByHostname` calls
+   * `normalizeHost()` itself, which is the only thing middleware was adding.
+   * Deleting the preference removes the trust boundary rather than narrowing
+   * it, so no future routing change can reopen this.
+   */
+  return resolveLeagueByHostname(headerList.get('host') ?? '');
 });

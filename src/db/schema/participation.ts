@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm';
-import { date, index, integer, pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import { date, foreignKey, index, integer, pgTable, text, unique, uuid } from 'drizzle-orm/pg-core';
 import { liveUnique, primaryId, timestamps } from './_shared';
 import {
   ageReferenceModeEnum,
@@ -19,6 +19,23 @@ import { organizations } from './tenancy';
  * participation in one competition in one season. Fixtures, standings and
  * registrations all point at the entry, so when a team is promoted its history
  * stays attached to the right rung rather than being retroactively rewritten.
+ *
+ * ── COMPOSITE FOREIGN KEYS ──────────────────────────────────────────────────
+ * Every reference between two league-scoped tables is (org_id, x_id) rather
+ * than just x_id, and each referenced table carries a matching UNIQUE
+ * (org_id, id).
+ *
+ * This is not decoration. Row-level security filters what a league can READ,
+ * but foreign-key constraint checks run with elevated privilege and bypass
+ * policies entirely. With a plain `club_id` reference, league A could create a
+ * team pointing at a club in league B — a club it cannot see — and league B
+ * would then be permanently unable to delete its own club, blocked by a row
+ * outside its tenant that it has no way to inspect. That was reproduced
+ * against a live database before this was changed.
+ *
+ * Carrying org_id into the reference makes a cross-league pointer impossible to
+ * express, rather than merely unlikely.
+ * ────────────────────────────────────────────────────────────────────────────
  */
 
 export const clubs = pgTable(
@@ -38,6 +55,9 @@ export const clubs = pgTable(
     ...timestamps,
   },
   (t) => [
+    // The FK target. Redundant given id is already unique, but PostgreSQL
+    // requires an explicit UNIQUE on the exact referenced column pair.
+    unique('clubs_org_id_key').on(t.orgId, t.id),
     liveUnique('clubs_org_slug_unique', t.orgId, t.slug),
     index('clubs_org_idx').on(t.orgId),
     index('clubs_name_idx').on(t.name),
@@ -51,9 +71,7 @@ export const teams = pgTable(
     orgId: uuid('org_id')
       .notNull()
       .references(() => organizations.id, { onDelete: 'cascade' }),
-    clubId: uuid('club_id')
-      .notNull()
-      .references(() => clubs.id, { onDelete: 'restrict' }),
+    clubId: uuid('club_id').notNull(),
     name: text('name').notNull(),
     slug: text('slug').notNull(),
     /** Distinguishes a club's sides: "First XI", "Reserves", "Masters". */
@@ -61,6 +79,12 @@ export const teams = pgTable(
     ...timestamps,
   },
   (t) => [
+    unique('teams_org_id_key').on(t.orgId, t.id),
+    foreignKey({
+      columns: [t.orgId, t.clubId],
+      foreignColumns: [clubs.orgId, clubs.id],
+      name: 'teams_club_fk',
+    }).onDelete('restrict'),
     liveUnique('teams_org_slug_unique', t.orgId, t.slug),
     index('teams_club_idx').on(t.clubId),
     index('teams_org_idx').on(t.orgId),
@@ -82,12 +106,8 @@ export const editionEntries = pgTable(
     orgId: uuid('org_id')
       .notNull()
       .references(() => organizations.id, { onDelete: 'cascade' }),
-    editionId: uuid('edition_id')
-      .notNull()
-      .references(() => competitionEditions.id, { onDelete: 'cascade' }),
-    teamId: uuid('team_id')
-      .notNull()
-      .references(() => teams.id, { onDelete: 'restrict' }),
+    editionId: uuid('edition_id').notNull(),
+    teamId: uuid('team_id').notNull(),
     status: entryStatusEnum('status').notNull().default('ACTIVE'),
     pointsAdjustment: integer('points_adjustment').notNull().default(0),
     withdrawnOn: date('withdrawn_on'),
@@ -95,6 +115,17 @@ export const editionEntries = pgTable(
     ...timestamps,
   },
   (t) => [
+    unique('edition_entries_org_id_key').on(t.orgId, t.id),
+    foreignKey({
+      columns: [t.orgId, t.editionId],
+      foreignColumns: [competitionEditions.orgId, competitionEditions.id],
+      name: 'edition_entries_edition_fk',
+    }).onDelete('cascade'),
+    foreignKey({
+      columns: [t.orgId, t.teamId],
+      foreignColumns: [teams.orgId, teams.id],
+      name: 'edition_entries_team_fk',
+    }).onDelete('restrict'),
     // Partial: a team that withdraws and is later reinstated must be able to
     // re-enter the same competition.
     liveUnique('edition_entries_unique', t.editionId, t.teamId),
@@ -117,17 +148,23 @@ export const stageGroupEntries = pgTable(
     orgId: uuid('org_id')
       .notNull()
       .references(() => organizations.id, { onDelete: 'cascade' }),
-    stageGroupId: uuid('stage_group_id')
-      .notNull()
-      .references(() => stageGroups.id, { onDelete: 'cascade' }),
-    editionEntryId: uuid('edition_entry_id')
-      .notNull()
-      .references(() => editionEntries.id, { onDelete: 'cascade' }),
+    stageGroupId: uuid('stage_group_id').notNull(),
+    editionEntryId: uuid('edition_entry_id').notNull(),
     /** Seeding, and the bracket slot for a knockout. */
     slotNumber: integer('slot_number'),
     ...timestamps,
   },
   (t) => [
+    foreignKey({
+      columns: [t.orgId, t.stageGroupId],
+      foreignColumns: [stageGroups.orgId, stageGroups.id],
+      name: 'stage_group_entries_group_fk',
+    }).onDelete('cascade'),
+    foreignKey({
+      columns: [t.orgId, t.editionEntryId],
+      foreignColumns: [editionEntries.orgId, editionEntries.id],
+      name: 'stage_group_entries_entry_fk',
+    }).onDelete('cascade'),
     liveUnique('stage_group_entries_unique', t.stageGroupId, t.editionEntryId),
     index('stage_group_entries_group_idx').on(t.stageGroupId),
   ],
@@ -157,7 +194,10 @@ export const eligibilityProfiles = pgTable(
     description: text('description'),
     ...timestamps,
   },
-  (t) => [liveUnique('eligibility_profiles_org_slug_unique', t.orgId, t.slug)],
+  (t) => [
+    unique('eligibility_profiles_org_id_key').on(t.orgId, t.id),
+    liveUnique('eligibility_profiles_org_slug_unique', t.orgId, t.slug),
+  ],
 );
 
 export const eligibilityRules = pgTable(
@@ -167,9 +207,7 @@ export const eligibilityRules = pgTable(
     orgId: uuid('org_id')
       .notNull()
       .references(() => organizations.id, { onDelete: 'cascade' }),
-    profileId: uuid('profile_id')
-      .notNull()
-      .references(() => eligibilityProfiles.id, { onDelete: 'cascade' }),
+    profileId: uuid('profile_id').notNull(),
     /** Inclusive bounds; null means unbounded on that side. */
     minAge: integer('min_age'),
     maxAge: integer('max_age'),
@@ -177,15 +215,20 @@ export const eligibilityRules = pgTable(
     /** Used when ageReferenceMode is FIXED_DATE. */
     referenceDate: date('reference_date'),
     /** Whether a cleared criminal record check is required to participate. */
-    screeningRequired: screeningStatusEnum('screening_required')
-      .notNull()
-      .default('NOT_REQUIRED'),
+    screeningRequired: screeningStatusEnum('screening_required').notNull().default('NOT_REQUIRED'),
     /** Maximum squad size, where the competition caps it. */
     maxSquadSize: integer('max_squad_size'),
     notes: text('notes'),
     ...timestamps,
   },
-  (t) => [index('eligibility_rules_profile_idx').on(t.profileId)],
+  (t) => [
+    foreignKey({
+      columns: [t.orgId, t.profileId],
+      foreignColumns: [eligibilityProfiles.orgId, eligibilityProfiles.id],
+      name: 'eligibility_rules_profile_fk',
+    }).onDelete('cascade'),
+    index('eligibility_rules_profile_idx').on(t.profileId),
+  ],
 );
 
 /**
@@ -203,15 +246,9 @@ export const personRegistrations = pgTable(
     orgId: uuid('org_id')
       .notNull()
       .references(() => organizations.id, { onDelete: 'cascade' }),
-    personId: uuid('person_id')
-      .notNull()
-      .references(() => persons.id, { onDelete: 'cascade' }),
-    editionEntryId: uuid('edition_entry_id')
-      .notNull()
-      .references(() => editionEntries.id, { onDelete: 'cascade' }),
-    seasonId: uuid('season_id')
-      .notNull()
-      .references(() => seasons.id, { onDelete: 'cascade' }),
+    personId: uuid('person_id').notNull(),
+    editionEntryId: uuid('edition_entry_id').notNull(),
+    seasonId: uuid('season_id').notNull(),
     status: registrationStatusEnum('status').notNull().default('PENDING'),
     squadNumber: integer('squad_number'),
 
@@ -225,6 +262,21 @@ export const personRegistrations = pgTable(
     ...timestamps,
   },
   (t) => [
+    foreignKey({
+      columns: [t.orgId, t.personId],
+      foreignColumns: [persons.orgId, persons.id],
+      name: 'person_registrations_person_fk',
+    }).onDelete('cascade'),
+    foreignKey({
+      columns: [t.orgId, t.editionEntryId],
+      foreignColumns: [editionEntries.orgId, editionEntries.id],
+      name: 'person_registrations_entry_fk',
+    }).onDelete('cascade'),
+    foreignKey({
+      columns: [t.orgId, t.seasonId],
+      foreignColumns: [seasons.orgId, seasons.id],
+      name: 'person_registrations_season_fk',
+    }).onDelete('cascade'),
     index('person_registrations_entry_idx').on(t.editionEntryId),
     index('person_registrations_person_idx').on(t.personId),
     index('person_registrations_org_status_idx').on(t.orgId, t.status),

@@ -37,5 +37,14 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)'],
+  /**
+   * Excludes only Next's own static output.
+   *
+   * The previous matcher also excluded any path ending in an image extension —
+   * `.*\.(?:svg|png|jpg|...)$` — which applies to the WHOLE pathname, not just
+   * files under /_next or /public. That silently exempted application routes:
+   * `/clubs/rutland-rovers.png` matched the exclusion and skipped middleware,
+   * so nothing stamped a request id and nothing normalised the host.
+   */
+  matcher: ['/((?!_next/static|_next/image|favicon\\.ico).*)'],
 };

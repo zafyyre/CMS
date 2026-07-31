@@ -1,5 +1,15 @@
 import { relations } from 'drizzle-orm';
-import { boolean, date, index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  date,
+  foreignKey,
+  index,
+  pgTable,
+  text,
+  timestamp,
+  unique,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { liveUnique, primaryId, timestamps } from './_shared';
 import {
   consentGrantedByEnum,
@@ -158,6 +168,10 @@ export const persons = pgTable(
     ...timestamps,
   },
   (t) => [
+    // FK target for every league-scoped table that references a person. See
+    // the composite-foreign-key note in participation.ts: without org_id in
+    // the reference, one league could point at another league's person record.
+    unique('persons_org_id_key').on(t.orgId, t.id),
     index('persons_org_idx').on(t.orgId),
     index('persons_org_name_idx').on(t.orgId, t.familyName, t.givenName),
     index('persons_user_idx').on(t.userId),
@@ -179,9 +193,7 @@ export const roleGrants = pgTable(
     orgId: uuid('org_id')
       .notNull()
       .references(() => organizations.id, { onDelete: 'cascade' }),
-    personId: uuid('person_id')
-      .notNull()
-      .references(() => persons.id, { onDelete: 'cascade' }),
+    personId: uuid('person_id').notNull(),
     role: roleEnum('role').notNull(),
     scopeKind: scopeKindEnum('scope_kind').notNull().default('ORGANIZATION'),
     /**
@@ -198,6 +210,11 @@ export const roleGrants = pgTable(
     ...timestamps,
   },
   (t) => [
+    foreignKey({
+      columns: [t.orgId, t.personId],
+      foreignColumns: [persons.orgId, persons.id],
+      name: 'role_grants_person_fk',
+    }).onDelete('cascade'),
     // Partial: revoking a grant and later re-issuing an identical one is
     // normal — an official steps down and returns the following season.
     liveUnique(
@@ -229,12 +246,8 @@ export const guardianships = pgTable(
     orgId: uuid('org_id')
       .notNull()
       .references(() => organizations.id, { onDelete: 'cascade' }),
-    minorPersonId: uuid('minor_person_id')
-      .notNull()
-      .references(() => persons.id, { onDelete: 'cascade' }),
-    guardianPersonId: uuid('guardian_person_id')
-      .notNull()
-      .references(() => persons.id, { onDelete: 'cascade' }),
+    minorPersonId: uuid('minor_person_id').notNull(),
+    guardianPersonId: uuid('guardian_person_id').notNull(),
     relationship: text('relationship'),
     /** Whether this guardian may give consent, as distinct from being a contact. */
     canGiveConsent: boolean('can_give_consent').notNull().default(true),
@@ -245,6 +258,16 @@ export const guardianships = pgTable(
     ...timestamps,
   },
   (t) => [
+    foreignKey({
+      columns: [t.orgId, t.minorPersonId],
+      foreignColumns: [persons.orgId, persons.id],
+      name: 'guardianships_minor_fk',
+    }).onDelete('cascade'),
+    foreignKey({
+      columns: [t.orgId, t.guardianPersonId],
+      foreignColumns: [persons.orgId, persons.id],
+      name: 'guardianships_guardian_fk',
+    }).onDelete('cascade'),
     liveUnique('guardianships_unique', t.minorPersonId, t.guardianPersonId),
     index('guardianships_minor_idx').on(t.minorPersonId),
     index('guardianships_guardian_idx').on(t.guardianPersonId),
@@ -266,16 +289,12 @@ export const consents = pgTable(
     orgId: uuid('org_id')
       .notNull()
       .references(() => organizations.id, { onDelete: 'cascade' }),
-    personId: uuid('person_id')
-      .notNull()
-      .references(() => persons.id, { onDelete: 'cascade' }),
+    personId: uuid('person_id').notNull(),
     kind: consentKindEnum('kind').notNull(),
     state: consentStateEnum('state').notNull(),
     grantedBy: consentGrantedByEnum('granted_by').notNull().default('SELF'),
     /** Set when `grantedBy` is GUARDIAN. */
-    grantedByPersonId: uuid('granted_by_person_id').references(() => persons.id, {
-      onDelete: 'set null',
-    }),
+    grantedByPersonId: uuid('granted_by_person_id'),
     /** Where it came from — a form, a paper record, an import. Evidence. */
     source: text('source'),
     recordedAt: timestamp('recorded_at', { withTimezone: true }).notNull().defaultNow(),
@@ -283,6 +302,26 @@ export const consents = pgTable(
     ...timestamps,
   },
   (t) => [
+    foreignKey({
+      columns: [t.orgId, t.personId],
+      foreignColumns: [persons.orgId, persons.id],
+      name: 'consents_person_fk',
+    }).onDelete('cascade'),
+    /**
+     * NO ACTION rather than SET NULL.
+     *
+     * A composite FK's SET NULL nulls EVERY column in the reference, which
+     * here would include org_id — and org_id is NOT NULL, so the delete would
+     * fail at runtime with a confusing constraint error rather than doing what
+     * was intended. NO ACTION says the honest thing instead: a person who
+     * granted a consent cannot be hard-deleted while that record stands. That
+     * is already the intended behaviour, since people are soft-deleted.
+     */
+    foreignKey({
+      columns: [t.orgId, t.grantedByPersonId],
+      foreignColumns: [persons.orgId, persons.id],
+      name: 'consents_granted_by_fk',
+    }),
     index('consents_person_kind_idx').on(t.personId, t.kind),
     index('consents_org_kind_state_idx').on(t.orgId, t.kind, t.state),
   ],

@@ -2,11 +2,13 @@ import { relations } from 'drizzle-orm';
 import {
   boolean,
   date,
+  foreignKey,
   index,
   integer,
   jsonb,
   pgTable,
   text,
+  unique,
   uuid,
 } from 'drizzle-orm/pg-core';
 import { liveUnique, primaryId, timestamps } from './_shared';
@@ -72,7 +74,10 @@ export const governingBodies = pgTable(
     parentBodyId: uuid('parent_body_id'),
     ...timestamps,
   },
-  (t) => [liveUnique('governing_bodies_org_slug_unique', t.orgId, t.slug)],
+  (t) => [
+    unique('governing_bodies_org_id_key').on(t.orgId, t.id),
+    liveUnique('governing_bodies_org_slug_unique', t.orgId, t.slug),
+  ],
 );
 
 // ---------------------------------------------------------------------------
@@ -102,7 +107,10 @@ export const registrationYears = pgTable(
     registrationClosesOn: date('registration_closes_on'),
     ...timestamps,
   },
-  (t) => [liveUnique('registration_years_org_slug_unique', t.orgId, t.slug)],
+  (t) => [
+    unique('registration_years_org_id_key').on(t.orgId, t.id),
+    liveUnique('registration_years_org_slug_unique', t.orgId, t.slug),
+  ],
 );
 
 /**
@@ -123,9 +131,7 @@ export const seasons = pgTable(
     orgId: uuid('org_id')
       .notNull()
       .references(() => organizations.id, { onDelete: 'cascade' }),
-    registrationYearId: uuid('registration_year_id')
-      .notNull()
-      .references(() => registrationYears.id, { onDelete: 'cascade' }),
+    registrationYearId: uuid('registration_year_id').notNull(),
     name: text('name').notNull(), // "Autumn/Winter 2025-26"
     slug: text('slug').notNull(),
     ordinalInYear: integer('ordinal_in_year').notNull().default(1),
@@ -137,6 +143,12 @@ export const seasons = pgTable(
     ...timestamps,
   },
   (t) => [
+    unique('seasons_org_id_key').on(t.orgId, t.id),
+    foreignKey({
+      columns: [t.orgId, t.registrationYearId],
+      foreignColumns: [registrationYears.orgId, registrationYears.id],
+      name: 'seasons_registration_year_fk',
+    }).onDelete('cascade'),
     liveUnique('seasons_org_slug_unique', t.orgId, t.slug),
     index('seasons_org_status_idx').on(t.orgId, t.status),
   ],
@@ -171,7 +183,10 @@ export const ladders = pgTable(
     isActive: boolean('is_active').notNull().default(true),
     ...timestamps,
   },
-  (t) => [liveUnique('ladders_org_slug_unique', t.orgId, t.slug)],
+  (t) => [
+    unique('ladders_org_id_key').on(t.orgId, t.id),
+    liveUnique('ladders_org_slug_unique', t.orgId, t.slug),
+  ],
 );
 
 /**
@@ -195,14 +210,12 @@ export const competitionSeries = pgTable(
     name: text('name').notNull(),
     slug: text('slug').notNull(),
     /** Set for pyramid grades; null for cups and one-off play-offs. */
-    ladderId: uuid('ladder_id').references(() => ladders.id, { onDelete: 'set null' }),
+    ladderId: uuid('ladder_id'),
     sortOrder: integer('sort_order').notNull().default(0),
     foundedYear: integer('founded_year'),
     /** True when another body runs it and we merely record participation. */
     isExternallyOperated: boolean('is_externally_operated').notNull().default(false),
-    operatedByBodyId: uuid('operated_by_body_id').references(() => governingBodies.id, {
-      onDelete: 'set null',
-    }),
+    operatedByBodyId: uuid('operated_by_body_id'),
     /** Renames, splits and merges, so history stays connected. */
     predecessorSeriesId: uuid('predecessor_series_id'),
     description: text('description'),
@@ -210,6 +223,24 @@ export const competitionSeries = pgTable(
     ...timestamps,
   },
   (t) => [
+    unique('competition_series_org_id_key').on(t.orgId, t.id),
+    /**
+     * NO ACTION rather than SET NULL on both of these. A composite FK's SET
+     * NULL nulls every column in the reference, which would include the
+     * NOT NULL org_id and fail at runtime. Retiring a ladder or a governing
+     * body while a series still points at it is therefore blocked, which is
+     * the honest behaviour.
+     */
+    foreignKey({
+      columns: [t.orgId, t.ladderId],
+      foreignColumns: [ladders.orgId, ladders.id],
+      name: 'competition_series_ladder_fk',
+    }),
+    foreignKey({
+      columns: [t.orgId, t.operatedByBodyId],
+      foreignColumns: [governingBodies.orgId, governingBodies.id],
+      name: 'competition_series_body_fk',
+    }),
     liveUnique('competition_series_org_slug_unique', t.orgId, t.slug),
     index('competition_series_ladder_idx').on(t.ladderId),
   ],
@@ -230,12 +261,8 @@ export const competitionEditions = pgTable(
     orgId: uuid('org_id')
       .notNull()
       .references(() => organizations.id, { onDelete: 'cascade' }),
-    seriesId: uuid('series_id')
-      .notNull()
-      .references(() => competitionSeries.id, { onDelete: 'cascade' }),
-    seasonId: uuid('season_id')
-      .notNull()
-      .references(() => seasons.id, { onDelete: 'cascade' }),
+    seriesId: uuid('series_id').notNull(),
+    seasonId: uuid('season_id').notNull(),
     slug: text('slug').notNull(),
     /** Sponsor names and one-off renamings, without touching the series. */
     nameOverride: text('name_override'),
@@ -252,6 +279,17 @@ export const competitionEditions = pgTable(
     ...timestamps,
   },
   (t) => [
+    unique('competition_editions_org_id_key').on(t.orgId, t.id),
+    foreignKey({
+      columns: [t.orgId, t.seriesId],
+      foreignColumns: [competitionSeries.orgId, competitionSeries.id],
+      name: 'competition_editions_series_fk',
+    }).onDelete('cascade'),
+    foreignKey({
+      columns: [t.orgId, t.seasonId],
+      foreignColumns: [seasons.orgId, seasons.id],
+      name: 'competition_editions_season_fk',
+    }).onDelete('cascade'),
     liveUnique('competition_editions_season_slug_unique', t.seasonId, t.slug),
     index('competition_editions_org_season_idx').on(t.orgId, t.seasonId),
     index('competition_editions_series_idx').on(t.seriesId),
@@ -273,9 +311,7 @@ export const stages = pgTable(
     orgId: uuid('org_id')
       .notNull()
       .references(() => organizations.id, { onDelete: 'cascade' }),
-    editionId: uuid('edition_id')
-      .notNull()
-      .references(() => competitionEditions.id, { onDelete: 'cascade' }),
+    editionId: uuid('edition_id').notNull(),
     ordinal: integer('ordinal').notNull(),
     name: text('name').notNull(),
     slug: text('slug').notNull(),
@@ -293,6 +329,12 @@ export const stages = pgTable(
     ...timestamps,
   },
   (t) => [
+    unique('stages_org_id_key').on(t.orgId, t.id),
+    foreignKey({
+      columns: [t.orgId, t.editionId],
+      foreignColumns: [competitionEditions.orgId, competitionEditions.id],
+      name: 'stages_edition_fk',
+    }).onDelete('cascade'),
     // Partial: removing a stage must free its ordinal, or restructuring a
     // competition mid-planning would leave permanent gaps in the sequence.
     liveUnique('stages_edition_ordinal_unique', t.editionId, t.ordinal),
@@ -315,9 +357,7 @@ export const stageGroups = pgTable(
     orgId: uuid('org_id')
       .notNull()
       .references(() => organizations.id, { onDelete: 'cascade' }),
-    stageId: uuid('stage_id')
-      .notNull()
-      .references(() => stages.id, { onDelete: 'cascade' }),
+    stageId: uuid('stage_id').notNull(),
     name: text('name').notNull(), // "Section A", "Quarter-finals"
     slug: text('slug').notNull(),
     ordinal: integer('ordinal').notNull().default(0),
@@ -326,6 +366,12 @@ export const stageGroups = pgTable(
     ...timestamps,
   },
   (t) => [
+    unique('stage_groups_org_id_key').on(t.orgId, t.id),
+    foreignKey({
+      columns: [t.orgId, t.stageId],
+      foreignColumns: [stages.orgId, stages.id],
+      name: 'stage_groups_stage_fk',
+    }).onDelete('cascade'),
     liveUnique('stage_groups_stage_slug_unique', t.stageId, t.slug),
     index('stage_groups_org_idx').on(t.orgId),
   ],
@@ -343,9 +389,7 @@ export const stageEntrySources = pgTable(
     orgId: uuid('org_id')
       .notNull()
       .references(() => organizations.id, { onDelete: 'cascade' }),
-    stageGroupId: uuid('stage_group_id')
-      .notNull()
-      .references(() => stageGroups.id, { onDelete: 'cascade' }),
+    stageGroupId: uuid('stage_group_id').notNull(),
     slotNumber: integer('slot_number').notNull(),
     kind: entrySourceKindEnum('kind').notNull(),
     /** For STAGE_POSITION / STAGE_WINNER / STAGE_LOSER. */
@@ -356,6 +400,11 @@ export const stageEntrySources = pgTable(
     ...timestamps,
   },
   (t) => [
+    foreignKey({
+      columns: [t.orgId, t.stageGroupId],
+      foreignColumns: [stageGroups.orgId, stageGroups.id],
+      name: 'stage_entry_sources_group_fk',
+    }).onDelete('cascade'),
     liveUnique('stage_entry_sources_slot_unique', t.stageGroupId, t.slotNumber),
     index('stage_entry_sources_org_idx').on(t.orgId),
   ],
@@ -376,20 +425,28 @@ export const progressionRules = pgTable(
     orgId: uuid('org_id')
       .notNull()
       .references(() => organizations.id, { onDelete: 'cascade' }),
-    stageGroupId: uuid('stage_group_id')
-      .notNull()
-      .references(() => stageGroups.id, { onDelete: 'cascade' }),
+    stageGroupId: uuid('stage_group_id').notNull(),
     kind: progressionKindEnum('kind').notNull(),
     fromPosition: integer('from_position').notNull(),
     toPosition: integer('to_position').notNull(),
     /** The series they move into. Null for RETENTION. */
-    targetSeriesId: uuid('target_series_id').references(() => competitionSeries.id, {
-      onDelete: 'set null',
-    }),
+    targetSeriesId: uuid('target_series_id'),
     note: text('note'),
     ...timestamps,
   },
-  (t) => [index('progression_rules_group_idx').on(t.stageGroupId)],
+  (t) => [
+    foreignKey({
+      columns: [t.orgId, t.stageGroupId],
+      foreignColumns: [stageGroups.orgId, stageGroups.id],
+      name: 'progression_rules_group_fk',
+    }).onDelete('cascade'),
+    foreignKey({
+      columns: [t.orgId, t.targetSeriesId],
+      foreignColumns: [competitionSeries.orgId, competitionSeries.id],
+      name: 'progression_rules_target_series_fk',
+    }),
+    index('progression_rules_group_idx').on(t.stageGroupId),
+  ],
 );
 
 // ---------------------------------------------------------------------------
@@ -416,13 +473,21 @@ export const honours = pgTable(
     slug: text('slug').notNull(),
     recipientKind: honourRecipientKindEnum('recipient_kind').notNull().default('TEAM'),
     /** The series it is normally attached to, where there is one. */
-    seriesId: uuid('series_id').references(() => competitionSeries.id, { onDelete: 'set null' }),
+    seriesId: uuid('series_id'),
     establishedYear: integer('established_year'),
     description: text('description'),
     isActive: boolean('is_active').notNull().default(true),
     ...timestamps,
   },
-  (t) => [liveUnique('honours_org_slug_unique', t.orgId, t.slug)],
+  (t) => [
+    unique('honours_org_id_key').on(t.orgId, t.id),
+    foreignKey({
+      columns: [t.orgId, t.seriesId],
+      foreignColumns: [competitionSeries.orgId, competitionSeries.id],
+      name: 'honours_series_fk',
+    }),
+    liveUnique('honours_org_slug_unique', t.orgId, t.slug),
+  ],
 );
 
 /** One year's winner. The rows here ARE the honours board. */
@@ -433,11 +498,9 @@ export const honourAwards = pgTable(
     orgId: uuid('org_id')
       .notNull()
       .references(() => organizations.id, { onDelete: 'cascade' }),
-    honourId: uuid('honour_id')
-      .notNull()
-      .references(() => honours.id, { onDelete: 'cascade' }),
-    seasonId: uuid('season_id').references(() => seasons.id, { onDelete: 'set null' }),
-    editionId: uuid('edition_id').references(() => competitionEditions.id, { onDelete: 'set null' }),
+    honourId: uuid('honour_id').notNull(),
+    seasonId: uuid('season_id'),
+    editionId: uuid('edition_id'),
     /** Exactly one of these is set, per the honour's recipientKind. */
     teamId: uuid('team_id'),
     personId: uuid('person_id'),
@@ -450,6 +513,26 @@ export const honourAwards = pgTable(
     ...timestamps,
   },
   (t) => [
+    foreignKey({
+      columns: [t.orgId, t.honourId],
+      foreignColumns: [honours.orgId, honours.id],
+      name: 'honour_awards_honour_fk',
+    }).onDelete('cascade'),
+    /**
+     * NO ACTION, not SET NULL — see the note on competition_series. These are
+     * historical records anyway: an honours board must not lose which season a
+     * trophy was won in because someone tidied up an old season row.
+     */
+    foreignKey({
+      columns: [t.orgId, t.seasonId],
+      foreignColumns: [seasons.orgId, seasons.id],
+      name: 'honour_awards_season_fk',
+    }),
+    foreignKey({
+      columns: [t.orgId, t.editionId],
+      foreignColumns: [competitionEditions.orgId, competitionEditions.id],
+      name: 'honour_awards_edition_fk',
+    }),
     index('honour_awards_honour_idx').on(t.honourId),
     index('honour_awards_org_season_idx').on(t.orgId, t.seasonId),
   ],
