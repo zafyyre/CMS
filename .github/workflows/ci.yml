@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Compose is used rather than GitHub's `services:` block so CI exercises
+      # the SAME database wiring as a developer's machine — including the
+      # app_user / migrator role separation created by db/init, which is the
+      # thing that makes row-level security actually bind.
+      #
+      # A `services: postgres` block would run everything as the superuser, and
+      # every isolation test would pass vacuously while proving nothing.
+      - name: Start PostgreSQL and Redis
+        run: docker compose up -d
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          SECRET=$(node -e "console.log(require('crypto').randomBytes(32).toString('base64'))")
+          sed -i "s|replace-me-with-32-bytes-of-base64-randomness|${SECRET}|" .env
+
+      - name: Wait for PostgreSQL
+        run: |
+          for _ in $(seq 1 40); do
+            if [ "$(docker inspect --format '{{.State.Health.Status}}' cms_postgres)" = "healthy" ]; then
+              echo "postgres healthy"; exit 0
+            fi
+            sleep 2
+          done
+          echo "postgres never became healthy"; docker compose logs postgres; exit 1
+
+      # Each run also re-asserts against pg_catalog that app_user is powerless,
+      # owns nothing, that every org_id table has FORCEd RLS, and that the audit
+      # log has no UPDATE or DELETE policy. The migration FAILS if any drifted.
+      - name: Migrate (applies + verifies RLS)
+        run: |
+          npm run db:migrate
+          npm run db:migrate:test
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      # Static guard against the shapes of tenancy bypass. Cheap, and it makes
+      # the failure arrive in review rather than as an empty result at runtime.
+      - name: Tenancy guard
+        run: npm run guard
+
+      # Includes the cross-tenant isolation suite. This step must never be made
+      # optional — it gates the one unrecoverable failure mode.
+      - name: Tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Database logs on failure
+        if: failure()
+        run: docker compose logs postgres

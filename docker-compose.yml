@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: cms_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: cms
+    ports:
+      # Host port 5433, NOT 5432.
+      #
+      # This machine runs a native PostgreSQL 18 Windows service already bound
+      # to 0.0.0.0:5432. Docker's mapping does not displace it, so an app
+      # pointed at localhost:5432 silently reaches the wrong server — verified
+      # by connecting with this container's own password and being rejected.
+      #
+      # Using a distinct port leaves that existing install untouched.
+      - '5433:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Runs once, on first initialisation of an empty data volume.
+      # `docker compose down -v` wipes the volume so these re-run.
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d cms']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    container_name: cms_redis
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
+  redis_data:

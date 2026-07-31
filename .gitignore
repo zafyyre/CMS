@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# planning
+plan.md
+
+# Accidental artefact of a mangled shell redirect (the filename is a path)
+D*ProjectsCMStest.txt

@@ -1,26 +1,257 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
+@custom-variant dark (&:is(.dark *));
+
+/* ===========================================================================
+   DESIGN SYSTEM
+
+   Three layers, in this order:
+
+     1. PRIMITIVES  — raw ramps. No meaning attached. Never used directly.
+     2. SEMANTIC    — roles: surface, text, border, status. What components use.
+     3. TENANT      — per-league overrides, seeded from organizations.theme.
+
+   Two constraints drive most of the concrete decisions here:
+
+     • This league is ~6,000 men, which is roughly 480 people with red/green
+       colour deficiency. So NO status is ever encoded by hue alone. Every
+       status is text + shape/icon + colour, in that order of priority. The
+       colour is the last and least important channel.
+
+     • O35/O45/O55 divisions mean a large readership over 50, reading outdoors
+       on a phone in poor light. So body text targets 7:1 contrast (WCAG AAA)
+       rather than the 4.5:1 floor.
+   ========================================================================= */
+
+/* --- Layer 1: primitives -------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Neutral ramp, perceptually even in OKLCH. */
+  --n-0: oklch(1 0 0);
+  --n-50: oklch(0.985 0 0);
+  --n-100: oklch(0.97 0 0);
+  --n-200: oklch(0.922 0 0);
+  --n-300: oklch(0.87 0 0);
+  --n-400: oklch(0.708 0 0);
+  --n-500: oklch(0.556 0 0);
+  --n-600: oklch(0.45 0 0);
+  --n-700: oklch(0.371 0 0);
+  --n-800: oklch(0.269 0 0);
+  --n-900: oklch(0.205 0 0);
+  --n-950: oklch(0.145 0 0);
+
+  /* Pitch green — the default league accent, overridable per tenant. */
+  --accent-hue: 155;
+  --accent-chroma: 0.11;
+
+  /* Status hues. Deliberately far apart in LIGHTNESS as well as hue, so they
+     remain distinguishable in greyscale and to colour-deficient readers. */
+  --hue-positive: 155; /* win, open, cleared */
+  --hue-caution: 85;   /* pending, provisional */
+  --hue-negative: 25;  /* loss, closed, suspended */
+  --hue-info: 250;     /* scheduled, informational */
 }
 
+/* --- Layer 2: semantic roles (light) ------------------------------------- */
+:root {
+  --background: var(--n-0);
+  --foreground: var(--n-950);
+
+  --card: var(--n-0);
+  --card-foreground: var(--n-950);
+  --popover: var(--n-0);
+  --popover-foreground: var(--n-950);
+
+  --primary: oklch(0.45 var(--accent-chroma) var(--accent-hue));
+  --primary-foreground: var(--n-0);
+
+  --secondary: var(--n-100);
+  --secondary-foreground: var(--n-900);
+
+  --muted: var(--n-100);
+  /* Darkened from the shadcn default (0.556) to reach ~7:1 on white. Secondary
+     text is where an ageing readership is failed most often. */
+  --muted-foreground: var(--n-600);
+
+  --accent: var(--n-100);
+  --accent-foreground: var(--n-900);
+
+  --destructive: oklch(0.5 0.2 var(--hue-negative));
+
+  --border: var(--n-200);
+  --input: var(--n-200);
+  --ring: oklch(0.55 var(--accent-chroma) var(--accent-hue));
+
+  /* Status roles — always paired with a label and a glyph in the UI. */
+  --status-positive: oklch(0.42 0.12 var(--hue-positive));
+  --status-positive-bg: oklch(0.95 0.03 var(--hue-positive));
+  --status-caution: oklch(0.45 0.11 var(--hue-caution));
+  --status-caution-bg: oklch(0.96 0.04 var(--hue-caution));
+  --status-negative: oklch(0.47 0.16 var(--hue-negative));
+  --status-negative-bg: oklch(0.95 0.03 var(--hue-negative));
+  --status-info: oklch(0.45 0.1 var(--hue-info));
+  --status-info-bg: oklch(0.95 0.03 var(--hue-info));
+
+  --chart-1: oklch(0.55 0.12 var(--accent-hue));
+  --chart-2: oklch(0.55 0.1 var(--hue-info));
+  --chart-3: oklch(0.55 0.11 var(--hue-caution));
+  --chart-4: oklch(0.55 0.13 var(--hue-negative));
+  --chart-5: var(--n-500);
+
+  --radius: 0.625rem;
+
+  --sidebar: var(--n-50);
+  --sidebar-foreground: var(--n-950);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--n-0);
+  --sidebar-accent: var(--n-100);
+  --sidebar-accent-foreground: var(--n-900);
+  --sidebar-border: var(--n-200);
+  --sidebar-ring: var(--ring);
+}
+
+/* --- Layer 2: semantic roles (dark) -------------------------------------- */
+.dark {
+  --background: var(--n-950);
+  --foreground: var(--n-50);
+
+  --card: var(--n-900);
+  --card-foreground: var(--n-50);
+  --popover: var(--n-900);
+  --popover-foreground: var(--n-50);
+
+  --primary: oklch(0.78 0.13 var(--accent-hue));
+  --primary-foreground: var(--n-950);
+
+  --secondary: var(--n-800);
+  --secondary-foreground: var(--n-50);
+
+  --muted: var(--n-800);
+  /* Lightened from the shadcn default (0.708) to hold ~7:1 on the dark surface. */
+  --muted-foreground: oklch(0.78 0 0);
+
+  --accent: var(--n-800);
+  --accent-foreground: var(--n-50);
+
+  --destructive: oklch(0.72 0.18 var(--hue-negative));
+
+  --border: oklch(1 0 0 / 14%);
+  --input: oklch(1 0 0 / 18%);
+  --ring: oklch(0.7 0.1 var(--accent-hue));
+
+  --status-positive: oklch(0.82 0.14 var(--hue-positive));
+  --status-positive-bg: oklch(0.3 0.05 var(--hue-positive));
+  --status-caution: oklch(0.85 0.13 var(--hue-caution));
+  --status-caution-bg: oklch(0.32 0.05 var(--hue-caution));
+  --status-negative: oklch(0.78 0.16 var(--hue-negative));
+  --status-negative-bg: oklch(0.32 0.06 var(--hue-negative));
+  --status-info: oklch(0.8 0.11 var(--hue-info));
+  --status-info-bg: oklch(0.3 0.05 var(--hue-info));
+
+  --sidebar: var(--n-900);
+  --sidebar-foreground: var(--n-50);
+  --sidebar-accent: var(--n-800);
+  --sidebar-accent-foreground: var(--n-50);
+  --sidebar-border: oklch(1 0 0 / 14%);
+}
+
+/* --- Tailwind bindings ---------------------------------------------------- */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  --color-status-positive: var(--status-positive);
+  --color-status-positive-bg: var(--status-positive-bg);
+  --color-status-caution: var(--status-caution);
+  --color-status-caution-bg: var(--status-caution-bg);
+  --color-status-negative: var(--status-negative);
+  --color-status-negative-bg: var(--status-negative-bg);
+  --color-status-info: var(--status-info);
+  --color-status-info-bg: var(--status-info-bg);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
   }
-}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  body {
+    @apply bg-background text-foreground;
+    /* Slightly larger than the 16px default: this is read outdoors, on a phone,
+       by a membership with O35 through O55 divisions. */
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  html {
+    @apply font-sans;
+  }
+
+  /* Every score, standing, squad number and statistic. Proportional digits in a
+     league table are harder to scan down a column and read as amateurish — this
+     is the single cheapest thing that makes sports data look considered. */
+  table,
+  .tabular,
+  [data-numeric] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* A visible focus ring that survives a high-contrast setting. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
