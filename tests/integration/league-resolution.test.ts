@@ -1,6 +1,8 @@
+import { eq } from 'drizzle-orm';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
+import { orgDomains, organizations } from '@/db/schema';
 import { normalizeHost, resolveLeagueByHostname } from '@/server/tenancy/current-league';
-import { closeFixtures, createLeagueFixture, truncateAll } from '../helpers/fixtures';
+import { closeFixtures, createLeagueFixture, rootDb, truncateAll } from '../helpers/fixtures';
 
 /**
  * Hostname → league resolution.
@@ -18,11 +20,13 @@ import { closeFixtures, createLeagueFixture, truncateAll } from '../helpers/fixt
  */
 
 const DEFAULT_SLUG = process.env.DEFAULT_ORG_SLUG ?? 'demo';
+let alpha: Awaited<ReturnType<typeof createLeagueFixture>>;
+let defaultLeague: Awaited<ReturnType<typeof createLeagueFixture>>;
 
 beforeEach(async () => {
   await truncateAll();
-  await createLeagueFixture('alpha');
-  await createLeagueFixture(DEFAULT_SLUG);
+  alpha = await createLeagueFixture('alpha');
+  defaultLeague = await createLeagueFixture(DEFAULT_SLUG);
 });
 
 afterAll(async () => {
@@ -63,6 +67,22 @@ describe('resolving a registered domain', () => {
 
   it('returns nothing for an unregistered hostname', async () => {
     expect(await resolveLeagueByHostname('nobody.invalid')).toBeNull();
+  });
+});
+
+describe('retired routing records', () => {
+  it('does not resolve a soft-deleted domain or default league', async () => {
+    await rootDb
+      .update(orgDomains)
+      .set({ deletedAt: new Date() })
+      .where(eq(orgDomains.orgId, alpha.orgId));
+    expect(await resolveLeagueByHostname('alpha.test.invalid')).toBeNull();
+
+    await rootDb
+      .update(organizations)
+      .set({ deletedAt: new Date() })
+      .where(eq(organizations.id, defaultLeague.orgId));
+    expect(await resolveLeagueByHostname('localhost')).toBeNull();
   });
 });
 

@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { headers } from 'next/headers';
 import { cache } from 'react';
 import { withSystem } from '@/db';
@@ -75,7 +75,13 @@ export async function resolveLeagueByHostname(hostname: string): Promise<Current
         .select(SELECTION)
         .from(orgDomains)
         .innerJoin(organizations, eq(orgDomains.orgId, organizations.id))
-        .where(eq(orgDomains.hostname, host))
+        .where(
+          and(
+            eq(orgDomains.hostname, host),
+            isNull(orgDomains.deletedAt),
+            isNull(organizations.deletedAt),
+          ),
+        )
         .limit(1);
       if (exact) return toLeague(exact);
 
@@ -87,7 +93,13 @@ export async function resolveLeagueByHostname(hostname: string): Promise<Current
           .select(SELECTION)
           .from(orgDomains)
           .innerJoin(organizations, eq(orgDomains.orgId, organizations.id))
-          .where(eq(orgDomains.hostname, host.slice(4)))
+          .where(
+            and(
+              eq(orgDomains.hostname, host.slice(4)),
+              isNull(orgDomains.deletedAt),
+              isNull(organizations.deletedAt),
+            ),
+          )
           .limit(1);
         if (stripped) return toLeague(stripped);
       }
@@ -99,7 +111,7 @@ export async function resolveLeagueByHostname(hostname: string): Promise<Current
     const [fallback] = await tx
       .select(SELECTION)
       .from(organizations)
-      .where(eq(organizations.slug, env.DEFAULT_ORG_SLUG))
+      .where(and(eq(organizations.slug, env.DEFAULT_ORG_SLUG), isNull(organizations.deletedAt)))
       .limit(1);
     return fallback ? toLeague(fallback) : null;
   });
