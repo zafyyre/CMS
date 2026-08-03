@@ -2,8 +2,19 @@ import { eq, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { withOrg } from '@/db';
-import { clubs, stageGroupEntries, stageGroups, stages } from '@/db/schema';
-import { listCompetitions, getCurrentSeason } from '@/server/services/competition';
+import {
+  clubs,
+  competitionSeries,
+  honourAwards,
+  stageGroupEntries,
+  stageGroups,
+  stages,
+} from '@/db/schema';
+import {
+  getCurrentSeason,
+  listCompetitions,
+  listHonoursBoard,
+} from '@/server/services/competition';
 import {
   closeFixtures,
   createLeagueFixture,
@@ -165,5 +176,42 @@ describe('competition team counts survive a team progressing between stages', ()
 
     const after = await listCompetitions(league.orgId, season!.id);
     expect(after.find((c) => c.slug === 'premier')?.teamCount).toBe(0);
+  });
+
+  it('excludes a soft-deleted series from the public competition list', async () => {
+    const season = await getCurrentSeason(league.orgId);
+    expect(season).not.toBeNull();
+    expect((await listCompetitions(league.orgId, season!.id)).map((c) => c.slug)).toContain('premier');
+
+    await withOrg(league.orgId, async (tx) => {
+      await tx
+        .update(competitionSeries)
+        .set({ deletedAt: new Date() })
+        .where(eq(competitionSeries.id, league.seriesId));
+    });
+
+    expect((await listCompetitions(league.orgId, season!.id)).map((c) => c.slug)).not.toContain('premier');
+  });
+
+  it('excludes a soft-deleted award from the public honours board', async () => {
+    const awardId = uuidv7();
+    await rootDb.insert(honourAwards).values({
+      id: awardId,
+      orgId: league.orgId,
+      honourId: league.honourId,
+      seasonId: league.seasonId,
+      recipientNameSnapshot: 'Alpha FC',
+      awardedOn: '2025-06-01',
+    });
+
+    const before = await listHonoursBoard(league.orgId);
+    expect(before.find((honour) => honour.id === league.honourId)?.winners).toHaveLength(1);
+
+    await withOrg(league.orgId, async (tx) => {
+      await tx.update(honourAwards).set({ deletedAt: new Date() }).where(eq(honourAwards.id, awardId));
+    });
+
+    const after = await listHonoursBoard(league.orgId);
+    expect(after.find((honour) => honour.id === league.honourId)?.winners).toHaveLength(0);
   });
 });

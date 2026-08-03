@@ -3,6 +3,7 @@ import { Pool } from 'pg';
 import { uuidv7 } from 'uuidv7';
 import { type OrgId, unsafeAsOrgId } from '../../src/db/org-id';
 import * as schema from '../../src/db/schema';
+import { assertTestDatabaseName, assertTestDatabaseUrl } from './test-database';
 
 /**
  * Test fixtures are created through a SUPERUSER connection.
@@ -17,6 +18,7 @@ import * as schema from '../../src/db/schema';
 
 const seedUrl = process.env.TEST_SEED_DATABASE_URL;
 if (!seedUrl) throw new Error('TEST_SEED_DATABASE_URL is not set');
+assertTestDatabaseUrl('TEST_SEED_DATABASE_URL', seedUrl);
 
 const rootPool = new Pool({ connectionString: seedUrl, max: 2 });
 export const rootDb = drizzle(rootPool, { schema });
@@ -162,6 +164,11 @@ export async function createLeagueFixture(slug: string): Promise<LeagueFixture> 
 }
 
 export async function truncateAll(): Promise<void> {
+  const target = await rootPool.query<{ database: string }>(
+    'select current_database() as database',
+  );
+  assertTestDatabaseName(target.rows[0]?.database, 'TEST_SEED_DATABASE_URL');
+
   await rootPool.query(`
     TRUNCATE TABLE
       person_registrations, stage_group_entries, edition_entries,

@@ -95,7 +95,10 @@ export async function listCompetitions(
         entryId: editionEntries.id,
       })
       .from(competitionEditions)
-      .innerJoin(competitionSeries, eq(competitionEditions.seriesId, competitionSeries.id))
+      .innerJoin(
+        competitionSeries,
+        and(eq(competitionEditions.seriesId, competitionSeries.id), isNull(competitionSeries.deletedAt)),
+      )
       .leftJoin(ladders, eq(competitionSeries.ladderId, ladders.id))
       .leftJoin(
         editionEntries,
@@ -215,7 +218,10 @@ export async function listHonoursBoard(orgId: OrgId) {
         value: honourAwards.value,
       })
       .from(honours)
-      .leftJoin(honourAwards, eq(honourAwards.honourId, honours.id))
+      .leftJoin(
+        honourAwards,
+        and(eq(honourAwards.honourId, honours.id), isNull(honourAwards.deletedAt)),
+      )
       .where(isNull(honours.deletedAt))
       .orderBy(asc(honours.name), desc(honourAwards.awardedOn));
 

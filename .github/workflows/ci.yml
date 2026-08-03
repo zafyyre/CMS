@@ -31,14 +31,17 @@ jobs:
       #
       # A `services: postgres` block would run everything as the superuser, and
       # every isolation test would pass vacuously while proving nothing.
-      - name: Start PostgreSQL and Redis
-        run: docker compose up -d
-
       - name: Prepare environment
         run: |
           cp .env.example .env
           SECRET=$(node -e "console.log(require('crypto').randomBytes(32).toString('base64'))")
+          POSTGRES_SECRET=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
           sed -i "s|replace-me-with-32-bytes-of-base64-randomness|${SECRET}|" .env
+          sed -i "s|^POSTGRES_SUPERUSER_PASSWORD=$|POSTGRES_SUPERUSER_PASSWORD=${POSTGRES_SECRET}|" .env
+          sed -i "s|replace-with-your-generated-superuser-password|${POSTGRES_SECRET}|g" .env
+
+      - name: Start PostgreSQL and Redis
+        run: docker compose up -d
 
       - name: Wait for PostgreSQL
         run: |

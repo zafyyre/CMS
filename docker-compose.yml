@@ -5,7 +5,9 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      # Deliberately required rather than defaulted: copying .env.example without
+      # generating a local secret must fail before a database is exposed.
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:?Set POSTGRES_SUPERUSER_PASSWORD in .env}
       POSTGRES_DB: cms
     ports:
       # Host port 5433, NOT 5432.
@@ -16,7 +18,8 @@ services:
       # by connecting with this container's own password and being rejected.
       #
       # Using a distinct port leaves that existing install untouched.
-      - '5433:5432'
+      # Development services must not be reachable from the LAN.
+      - '127.0.0.1:5433:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
       # Runs once, on first initialisation of an empty data volume.
