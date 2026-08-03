@@ -37,7 +37,9 @@ services:
     restart: unless-stopped
     command: ['redis-server', '--appendonly', 'yes']
     ports:
-      - '6379:6379'
+      # Redis has no authentication configured for this development stack, so
+      # keep it private to this host just like PostgreSQL.
+      - '127.0.0.1:6379:6379'
     volumes:
       - redis_data:/data
     healthcheck:
