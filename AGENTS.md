@@ -6,6 +6,6 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## Git workflow
 
-- Codex must never push commits directly to `dev` or `main`.
-- For every repository change, Codex must create a `codex/*` branch, push it, and open a pull request targeting `dev`.
-- Only merge `dev` into `main` through a separate pull request after explicit user approval.
+- Codex may commit and push changes directly to `dev`.
+- Codex must never push commits directly to `main`.
+- To move changes from `dev` to `main`, Codex must open a pull request targeting `main` and wait for explicit user approval before merging it.
