@@ -36,6 +36,10 @@ Something else is on 3000. `npm run dev -- -p 3001`.
 
 ### If the database will not connect
 
+PostgreSQL is bound to `127.0.0.1` and is deliberately unavailable to LAN
+clients. Before the first `db:up`, generate a local PostgreSQL superuser password
+and replace the matching values in `.env` as described in `.env.example`.
+
 Postgres is published on **5433**, not 5432 — deliberately. This machine runs a
 native PostgreSQL 18 Windows service already bound to `0.0.0.0:5432`, and Docker
 does not displace it, so an app pointed at 5432 silently talks to the wrong
@@ -45,7 +49,10 @@ server. Check what is actually listening:
 docker compose ps
 ```
 
-Both containers should say `healthy`, with postgres on `0.0.0.0:5433->5432/tcp`.
+Both containers should say `healthy`, with postgres on
+`127.0.0.1:5433->5432/tcp`. Existing local volumes retain their old bootstrap
+password; reset one only if appropriate for your local data using `npm run db:nuke`
+and then rerun the setup sequence below.
 
 ### Re-seeding
 

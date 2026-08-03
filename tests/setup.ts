@@ -1,4 +1,5 @@
 import { config } from 'dotenv';
+import { assertTestDatabaseUrl } from './helpers/test-database';
 
 config({ path: '.env' });
 
@@ -17,6 +18,12 @@ if (!testUrl) {
       'then `npm run db:migrate:test`.',
   );
 }
+
+assertTestDatabaseUrl('TEST_DATABASE_URL', testUrl);
+
+const testSeedUrl = process.env.TEST_SEED_DATABASE_URL;
+if (!testSeedUrl) throw new Error('TEST_SEED_DATABASE_URL is not set');
+assertTestDatabaseUrl('TEST_SEED_DATABASE_URL', testSeedUrl);
 
 process.env.POSTGRES_URL = testUrl;
 process.env.BETTER_AUTH_SECRET ??= 'test-secret-at-least-32-characters-long!!';
