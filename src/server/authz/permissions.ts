@@ -25,12 +25,17 @@ export const RESOURCES = [
   'competition', // series, editions, stages, groups
   'entry', // a team's participation
   'registration', // a person's affiliation to a team
+  'venue', // grounds and their closures
+  'fixture', // a scheduled match, and every change to it
+  'result', // a submitted scoreline
+  'matchEvent', // goals and cards
   'honour',
 ] as const;
 export type Resource = (typeof RESOURCES)[number];
 
 const ALL: readonly Action[] = ACTIONS;
 const READ: readonly Action[] = ['read'];
+const CREATE_READ: readonly Action[] = ['create', 'read'];
 const READ_UPDATE: readonly Action[] = ['read', 'update'];
 const CREATE_READ_UPDATE: readonly Action[] = ['create', 'read', 'update'];
 
@@ -44,6 +49,10 @@ const PUBLIC_READ: Grants = {
   season: READ,
   competition: READ,
   entry: READ,
+  venue: READ,
+  fixture: READ,
+  result: READ,
+  matchEvent: READ,
   honour: READ,
 };
 
@@ -68,6 +77,10 @@ export const ROLE_GRANTS: Record<Role, Grants> = {
     competition: ALL,
     entry: ALL,
     registration: ALL,
+    venue: ALL,
+    fixture: ALL,
+    result: ALL,
+    matchEvent: ALL,
     honour: ALL,
   },
 
@@ -96,7 +109,7 @@ export const ROLE_GRANTS: Record<Role, Grants> = {
     auditLog: READ,
   },
 
-  /** Write authority arrives in Phase 10 with fixtures and assignments. */
+  /** Write authority arrives in Phase 10 with assignments and match reports. */
   REFEREE_ASSIGNOR: {
     ...PUBLIC_READ,
     person: READ,
@@ -114,6 +127,15 @@ export const ROLE_GRANTS: Record<Role, Grants> = {
     person: CREATE_READ_UPDATE,
     registration: ALL,
     consent: CREATE_READ_UPDATE,
+    /**
+     * Create, and nothing else. A club may REPORT what it believes the score
+     * was — `result_submissions` is append-only, so reporting is the only
+     * verb available anyway — but it may not update or delete a submission,
+     * its own or anyone else's. Combined with the CLUB scope, that means a
+     * club can only report on its own matches, and cannot revise the record
+     * afterwards.
+     */
+    result: CREATE_READ,
   },
 
   /** Scoped to one team. */
@@ -122,6 +144,7 @@ export const ROLE_GRANTS: Record<Role, Grants> = {
     team: READ_UPDATE,
     person: CREATE_READ_UPDATE,
     registration: ALL,
+    result: CREATE_READ,
   },
 
   COACH: {
