@@ -228,6 +228,21 @@ describe('the review decision is remembered', () => {
     expect(aliases[0]?.confirmedAt).not.toBeNull();
   });
 
+  it('refuses a canonical id that was not offered as a candidate', async () => {
+    const batch = await stageImport(
+      admin(),
+      exportFile({ clubs: [{ key: 'c9', name: 'alpha FCC' }] }),
+    );
+    await resolveImport(admin(), batch.batchId);
+    const [item] = await listReviewQueue(league.orgId, batch.batchId);
+
+    const error = await catchError(() => confirmMatch(admin(), item!.recordId, league.teamId));
+
+    expect(error).toBeInstanceOf(ValidationError);
+    expect(await listReviewQueue(league.orgId, batch.batchId)).toHaveLength(1);
+    expect(await withOrg(league.orgId, (tx) => tx.select().from(entityAliases))).toHaveLength(0);
+  });
+
   it('a confirmed alias resolves the next batch without asking again', async () => {
     const first = await stageImport(
       admin(),

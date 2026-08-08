@@ -1,5 +1,6 @@
 import { TwoFactorForm } from '@/components/auth/two-factor-form';
 import { leagueThemeStyle } from '@/components/league-theme';
+import { safeNext } from '@/lib/safe-next';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
 
 /**
@@ -26,7 +27,7 @@ interface PageProps {
 export default async function TwoFactorPage({ searchParams }: PageProps) {
   const league = await getCurrentLeague();
   const { next } = await searchParams;
-  const destination = next && next.startsWith('/') && !next.startsWith('//') ? next : '/admin';
+  const destination = safeNext(next);
 
   return (
     <main

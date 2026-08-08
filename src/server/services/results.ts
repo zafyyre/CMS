@@ -20,6 +20,7 @@ import {
   timelineEvents,
 } from '@/server/match/events';
 import {
+  authorityOf,
   type MatchReportSource,
   resolveResult,
   type ResolvedResult,
@@ -76,7 +77,8 @@ export async function submitResult(
     assertMayReportAs(principal, sides, input.source);
 
     if (input.supersedesId) {
-      await assertSupersedable(tx, input.fixtureId, input.supersedesId);
+      const correctedSource = await assertSupersedable(tx, input.fixtureId, input.supersedesId);
+      assertMaySupersede(input.source, correctedSource);
       requireText(input.reason, 'reason');
     }
 
@@ -444,9 +446,13 @@ async function assertSupersedable(
   tx: Tx,
   fixtureId: string,
   supersedesId: string,
-): Promise<void> {
+): Promise<MatchReportSource> {
   const [target] = await tx
-    .select({ id: resultSubmissions.id, fixtureId: resultSubmissions.fixtureId })
+    .select({
+      id: resultSubmissions.id,
+      fixtureId: resultSubmissions.fixtureId,
+      source: resultSubmissions.source,
+    })
     .from(resultSubmissions)
     .where(eq(resultSubmissions.id, supersedesId));
 
@@ -463,6 +469,32 @@ async function assertSupersedable(
   if (already) {
     throw new ValidationError(
       'That submission has already been corrected. Correct the most recent one instead.',
+    );
+  }
+
+  return target.source as MatchReportSource;
+}
+
+/** A correction must not erase a report with greater authority. */
+function assertMaySupersede(
+  replacementSource: MatchReportSource,
+  correctedSource: MatchReportSource,
+): void {
+  const replacementAuthority = authorityOf(replacementSource);
+  const correctedAuthority = authorityOf(correctedSource);
+
+  // The two club reports have equal authority but are independent claims. A
+  // home-side report cannot withdraw an away-side report merely by replacing
+  // it, because doing so would hide the disagreement the resolver must show.
+  const replacesOpposingClub =
+    (replacementSource === 'HOME_TEAM' || replacementSource === 'AWAY_TEAM') &&
+    replacementSource !== correctedSource;
+
+  if (replacementAuthority < correctedAuthority || replacesOpposingClub) {
+    throw new ForbiddenError(
+      'update',
+      'result',
+      'a correction may only replace a lower-authority report or an earlier report from the same source',
     );
   }
 }

@@ -381,10 +381,16 @@ export async function confirmMatch(
       .from(importRecords)
       .where(eq(importRecords.id, recordId));
     if (!record) throw new NotFoundError('importRecord', recordId);
+    if (record.status !== 'NEEDS_REVIEW') {
+      throw new ValidationError('Only a record awaiting review can be confirmed.');
+    }
 
     const sourceName = requireText((record.payload as { name?: string }).name, 'name');
     const candidates = (record.candidates as Candidate[] | null) ?? [];
     const chosen = candidates.find((c) => c.id === canonicalId);
+    if (!chosen) {
+      throw new ValidationError('Choose one of the candidates offered for this record.');
+    }
 
     await tx.insert(entityAliases).values({
       orgId: principal.orgId,
@@ -392,7 +398,7 @@ export async function confirmMatch(
       alias: sourceName,
       normalizedAlias: normalizeName(sourceName),
       canonicalId,
-      confidence: chosen?.score ?? null,
+      confidence: chosen.score,
       confirmedAt: new Date(),
       confirmedByPersonId: principal.personId,
       proposedByBatchId: record.batchId,
@@ -404,7 +410,7 @@ export async function confirmMatch(
       action: 'import.confirmMatch',
       entityType: 'importRecord',
       entityId: recordId,
-      after: { alias: sourceName, canonicalId, confidence: chosen?.score ?? null },
+      after: { alias: sourceName, canonicalId, confidence: chosen.score },
     });
   });
 }

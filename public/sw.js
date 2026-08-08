@@ -22,10 +22,34 @@
  *   be served to whoever opened the app next on a shared phone.
  */
 
-const VERSION = 'v1';
+// Incremented with the public-page cache allowlist below so activating this
+// worker removes any authenticated pages stored by older clients.
+const VERSION = 'v2';
 const PAGE_CACHE = `pages-${VERSION}`;
 const ASSET_CACHE = `assets-${VERSION}`;
 const OFFLINE_URL = '/offline';
+
+// Cache Storage keys navigations by URL, not by the caller's session cookie.
+// Only the public routes are therefore eligible for offline HTML caching. Any
+// account, admin, or future authenticated route is network-only by default.
+const PUBLIC_PAGE_PREFIXES = [
+  '/',
+  '/clubs',
+  '/cups',
+  '/documents',
+  '/fields',
+  '/history',
+  '/news',
+  '/offline',
+  '/schedule',
+  '/standings',
+  '/teams',
+];
+
+const isPublicPage = (pathname) =>
+  PUBLIC_PAGE_PREFIXES.some(
+    (prefix) => pathname === prefix || (prefix !== '/' && pathname.startsWith(`${prefix}/`)),
+  );
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -64,6 +88,9 @@ self.addEventListener('fetch', (event) => {
 
   // API routes manage their own freshness, and some of them are per-user.
   if (url.pathname.startsWith('/api/')) return;
+
+  // See isPublicPage: never place authenticated HTML in the shared cache.
+  if (!isPublicPage(url.pathname)) return;
 
   if (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')) {
     event.respondWith(networkFirst(request));

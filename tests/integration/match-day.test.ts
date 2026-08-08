@@ -366,6 +366,52 @@ describe('submitting a result', () => {
     expect(report.result.supersededIds).toEqual([first.id]);
   });
 
+  it('does not let a team-side report supersede an official result', async () => {
+    const official = await submitResult(admin(), {
+      fixtureId,
+      source: 'REFEREE',
+      homeScore: 2,
+      awayScore: 1,
+    });
+    const homeManager = principalFor(league, teamScoped('TEAM_MANAGER', league.teamId));
+
+    const error = await catchError(() =>
+      submitResult(homeManager, {
+        fixtureId,
+        source: 'HOME_TEAM',
+        homeScore: 9,
+        awayScore: 0,
+        supersedesId: official.id,
+        reason: 'Forged correction.',
+      }),
+    );
+
+    expect(error).toBeInstanceOf(ForbiddenError);
+    const report = await getMatchReport(league.orgId, fixtureId);
+    expect(report.result.scoreline).toMatchObject({ homeScore: 2, awayScore: 1 });
+  });
+
+  it('lets a team-side report correct its own earlier report', async () => {
+    const homeManager = principalFor(league, teamScoped('TEAM_MANAGER', league.teamId));
+    const first = await submitResult(homeManager, {
+      fixtureId,
+      source: 'HOME_TEAM',
+      homeScore: 2,
+      awayScore: 1,
+    });
+
+    const correction = await submitResult(homeManager, {
+      fixtureId,
+      source: 'HOME_TEAM',
+      homeScore: 2,
+      awayScore: 2,
+      supersedesId: first.id,
+      reason: 'Score entry corrected.',
+    });
+
+    expect(correction.result.scoreline).toMatchObject({ homeScore: 2, awayScore: 2 });
+  });
+
   it('refuses to correct a submission that has already been corrected', async () => {
     const first = await submitResult(admin(), {
       fixtureId,

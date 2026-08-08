@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { SignInForm } from '@/components/auth/sign-in-form';
 import { leagueThemeStyle } from '@/components/league-theme';
+import { safeNext } from '@/lib/safe-next';
 import { getPrincipal } from '@/server/auth/principal';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
 
@@ -52,19 +53,4 @@ export default async function SignInPage({ searchParams }: PageProps) {
       <SignInForm next={safeNext(next)} />
     </main>
   );
-}
-
-/**
- * Only ever redirect to a path on this site.
- *
- * `?next=https://evil.example` would otherwise turn the league's own sign-in
- * page into an open redirect — the classic way a phishing link acquires a
- * trustworthy-looking domain. Anything not starting with a single `/` is
- * discarded rather than sanitised, and `//host` is rejected because browsers
- * read it as protocol-relative and it leaves the site.
- */
-export function safeNext(next: string | undefined): string {
-  if (!next) return '/admin';
-  if (!next.startsWith('/') || next.startsWith('//')) return '/admin';
-  return next;
 }
