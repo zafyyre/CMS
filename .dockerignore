@@ -1,0 +1,36 @@
+# Everything the build does not need, and several things it must never receive.
+#
+# `.env` is the important line. Without it, `COPY . .` in the builder stage bakes
+# real credentials into an image layer, where they survive every later stage and
+# can be read by anyone who can pull the image.
+
+.env
+.env.*
+!.env.example
+
+node_modules
+.next
+out
+build
+coverage
+test-results
+playwright-report
+tests/e2e/.auth
+
+.git
+.github
+.gitignore
+.claude
+
+# Generated sample data. Reproducible from scripts/sample-history.ts, and not
+# something a deployed image should carry.
+sample-data
+
+# Planning documents, not shipped.
+plan.md
+handoff.md
+README.md
+
+Dockerfile
+.dockerignore
+docker-compose.yml
