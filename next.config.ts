@@ -28,9 +28,33 @@ const csp = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
-  // `pg` relies on Node built-ins and dynamic requires the bundler cannot
-  // statically resolve, so it must not be bundled.
-  serverExternalPackages: ['pg'],
+  /**
+   * Emit `.next/standalone` — a self-contained server plus only the traced
+   * `node_modules`, so the deployment image does not need `npm ci` at all.
+   *
+   * Chosen over `next start` in a container because it keeps the runtime image
+   * small and, more importantly, keeps the host generic: the artefact is a
+   * plain Node process listening on `$PORT`, which every container platform can
+   * run. Nothing here ties the project to one vendor, which is the property
+   * Phase 14's hosting decision needs to stay reversible.
+   *
+   * `server.js` does NOT serve `public/` or `.next/static` on its own; the
+   * Dockerfile copies both in beside it.
+   */
+  output: 'standalone',
+
+  /**
+   * Packages the bundler must leave alone.
+   *
+   * `pg` relies on Node built-ins and dynamic requires that cannot be resolved
+   * statically. `pino` and `pino-pretty` are worse: pino loads its transport in
+   * a worker thread by resolving a module path at RUNTIME, so bundling it
+   * produces a build that fails while prerendering with a bare
+   * "Cannot read properties of null (reading 'useContext')" — an error naming
+   * neither the package nor the cause, which is why this line has a comment
+   * rather than just three strings.
+   */
+  serverExternalPackages: ['pg', 'pino', 'pino-pretty'],
 
   async headers() {
     return [

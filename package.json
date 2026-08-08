@@ -23,6 +23,24 @@
     "test:e2e": "playwright test",
     "verify": "npm run typecheck && npm run lint && npm run guard && npm run test"
   },
+  "//overrides": [
+    "drizzle-kit depends on the deprecated @esbuild-kit/* packages, which pin an",
+    "esbuild older than 0.25 — the version with GHSA-67mh-4wv8-2f99 (any website",
+    "can issue requests to esbuild's DEV SERVER and read the response).",
+    "",
+    "drizzle-kit is a devDependency and never starts that dev server, so nothing",
+    "here was actually exposed. It is overridden anyway so `npm audit` stays",
+    "clean and a real advisory is never buried under a known-noisy one.",
+    "",
+    "npm's own suggested fix is `drizzle-kit@0.18.1` — a DOWNGRADE from 0.31.10",
+    "that predates the `dialect`/`url` config this project uses, and would break",
+    "every migration. Do not run `npm audit fix --force` here."
+  ],
+  "overrides": {
+    "@esbuild-kit/core-utils": {
+      "esbuild": "^0.25.0"
+    }
+  },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
     "@t3-oss/env-nextjs": "^0.13.11",
@@ -31,8 +49,10 @@
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.2",
     "lucide-react": "^1.27.0",
-    "next": "16.2.12",
+    "next": "^16.3.0",
     "pg": "^8.22.0",
+    "pino": "^10.3.1",
+    "pino-pretty": "^13.1.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "shadcn": "^4.16.0",
@@ -50,7 +70,7 @@
     "dotenv": "^17.4.2",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
-    "eslint-config-next": "16.2.12",
+    "eslint-config-next": "^16.3.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.1",
     "typescript": "^5",
