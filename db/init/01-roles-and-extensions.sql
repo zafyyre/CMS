@@ -42,8 +42,6 @@ GRANT CREATE ON DATABASE cms_test TO migrator;
 \connect cms
 
 CREATE EXTENSION IF NOT EXISTS pg_trgm;   -- fuzzy name matching for search
-CREATE EXTENSION IF NOT EXISTS unaccent;  -- accent-insensitive search
-CREATE EXTENSION IF NOT EXISTS citext;    -- case-insensitive emails and slugs
 
 ALTER SCHEMA public OWNER TO migrator;
 GRANT USAGE, CREATE ON SCHEMA public TO migrator;
@@ -61,8 +59,6 @@ ALTER DEFAULT PRIVILEGES FOR ROLE migrator IN SCHEMA public
 \connect cms_test
 
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
-CREATE EXTENSION IF NOT EXISTS unaccent;
-CREATE EXTENSION IF NOT EXISTS citext;
 
 ALTER SCHEMA public OWNER TO migrator;
 GRANT USAGE, CREATE ON SCHEMA public TO migrator;
