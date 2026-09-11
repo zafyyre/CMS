@@ -1,5 +1,7 @@
+import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { checkDatabase } from '@/db';
+import { requestLogger } from '@/lib/logger';
 
 /**
  * Liveness and readiness probe.
@@ -22,7 +24,11 @@ export async function GET() {
       { status: 200 },
     );
   } catch (error) {
-    console.error('[healthz] database check failed:', error);
+    // Structured, and carrying the request id middleware stamped, so this line
+    // can be joined to the request that produced it.
+    const log = requestLogger((await headers()).get('x-request-id'));
+    log.error({ err: error }, 'health check could not reach the database');
+
     return NextResponse.json(
       { status: 'degraded', database: { ok: false }, ts: new Date().toISOString() },
       { status: 503 },

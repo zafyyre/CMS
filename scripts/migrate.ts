@@ -8,6 +8,7 @@ import {
   APPEND_ONLY_TABLES,
   buildPolicySql,
   IDENTITY_TABLES,
+  PUBLISHED_IMMUTABLE_TABLES,
 } from '../src/db/policies';
 
 config({ path: '.env' });
@@ -52,6 +53,7 @@ async function main() {
   await assertNoUnprotectedTenantTable();
   await assertPoliciesAreLive();
   await assertAppendOnlyTablesAreImmutable();
+  await assertPublishedRowsAreFrozen();
   await assertAppRoleCannotEscape();
 
   console.log('✓ migration and security verification complete\n');
@@ -165,6 +167,82 @@ async function assertAppendOnlyTablesAreImmutable() {
   if (problems.length > 0) {
     throw new Error(
       `Append-only verification failed:\n${problems.map((p) => `  - ${p}`).join('\n')}`,
+    );
+  }
+}
+
+/**
+ * A published rule set must be unreachable by UPDATE and DELETE.
+ *
+ * The policy carries the condition in its USING clause, so this reads the
+ * clause back out of the catalog and confirms it mentions `published_at`. That
+ * is a coarse check, deliberately: the alternative is parsing an expression
+ * tree, and what actually needs guarding against is somebody later "tidying"
+ * the policy into an unconditional one. A behavioural test in
+ * tests/integration/standings.test.ts proves the semantics.
+ *
+ * The column check is not incidental. If `published_at` were ever dropped, the
+ * generated policy would fail to create and the table would silently fall back
+ * to whatever policy existed before — permissive rather than loud.
+ */
+async function assertPublishedRowsAreFrozen() {
+  const problems: string[] = [];
+
+  for (const table of PUBLISHED_IMMUTABLE_TABLES) {
+    const { rows: columns } = await client.query<{ exists: boolean }>(
+      `SELECT true AS exists
+       FROM pg_attribute a
+       JOIN pg_class c ON c.oid = a.attrelid
+       JOIN pg_namespace n ON n.oid = c.relnamespace
+       WHERE n.nspname = 'public' AND c.relname = $1
+         AND a.attname = 'published_at' AND a.attisdropped = false`,
+      [table],
+    );
+    if (columns.length === 0) {
+      problems.push(`${table}: has no published_at column, so it cannot be frozen`);
+      continue;
+    }
+
+    const { rows: policies } = await client.query<{
+      polname: string;
+      polcmd: string;
+      qual: string | null;
+    }>(
+      `SELECT p.polname, p.polcmd::text AS polcmd,
+              pg_get_expr(p.polqual, p.polrelid) AS qual
+       FROM pg_policy p
+       JOIN pg_class c ON c.oid = p.polrelid
+       JOIN pg_namespace n ON n.oid = c.relnamespace
+       WHERE n.nspname = 'public' AND c.relname = $1`,
+      [table],
+    );
+
+    // polcmd: r=SELECT, a=INSERT, w=UPDATE, d=DELETE, *=ALL
+    for (const policy of policies) {
+      if (policy.polcmd === '*') {
+        problems.push(
+          `${table}: policy "${policy.polname}" covers ALL commands, which would ` +
+            'let a published rule set be rewritten',
+        );
+        continue;
+      }
+      if (policy.polcmd !== 'w' && policy.polcmd !== 'd') continue;
+      if (!policy.qual?.includes('published_at')) {
+        const what = policy.polcmd === 'w' ? 'UPDATE' : 'DELETE';
+        problems.push(
+          `${table}: ${what} policy "${policy.polname}" does not exclude published rows`,
+        );
+      }
+    }
+
+    if (!policies.some((p) => p.polcmd === 'r')) {
+      problems.push(`${table}: no SELECT policy — the rules could never be read`);
+    }
+  }
+
+  if (problems.length > 0) {
+    throw new Error(
+      `Published-immutability verification failed:\n${problems.map((p) => `  - ${p}`).join('\n')}`,
     );
   }
 }

@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { leagueThemeStyle } from '@/components/league-theme';
 import { StatusPill } from '@/components/status-pill';
 import {
@@ -7,6 +8,7 @@ import {
   listCompetitions,
   listHonoursBoard,
 } from '@/server/services/competition';
+import { listClosuresInForce } from '@/server/services/venues';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
 
 /**
@@ -28,7 +30,7 @@ export default async function HomePage() {
 
   if (!league) {
     return (
-      <main className="mx-auto max-w-2xl p-8">
+      <main id="main" className="mx-auto max-w-2xl p-8">
         <h1 className="text-2xl font-semibold">No league configured</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           No league matches this hostname. Run <code className="font-mono">npm run db:seed</code>,
@@ -40,11 +42,12 @@ export default async function HomePage() {
   }
 
   const season = await getCurrentSeason(league.id);
-  const [competitions, clubs, honours, entryCount] = await Promise.all([
+  const [competitions, clubs, honours, entryCount, closures] = await Promise.all([
     season ? listCompetitions(league.id, season.id) : Promise.resolve([]),
     listClubs(league.id),
     listHonoursBoard(league.id),
     season ? countEntries(league.id, season.id) : Promise.resolve(0),
+    listClosuresInForce(league.id),
   ]);
 
   const leagues = competitions.filter((c) => !c.isCup);
@@ -53,7 +56,7 @@ export default async function HomePage() {
   return (
     // The league seeds only hue and chroma; lightness stays fixed so a league
     // cannot pick a brand colour that breaks contrast for its own members.
-    <main className="mx-auto max-w-5xl px-6 py-10" style={leagueThemeStyle(league.theme)}>
+    <main id="main" className="mx-auto max-w-5xl px-6 py-10" style={leagueThemeStyle(league.theme)}>
       <header className="border-b pb-6">
         <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
           {league.shortName ?? league.slug}
@@ -71,9 +74,60 @@ export default async function HomePage() {
             <StatusPill tone="caution">No season configured</StatusPill>
           )}
         </div>
+        <nav aria-label="Sections" className="mt-4 flex flex-wrap gap-4 text-sm">
+          <Link href="/standings" className="underline underline-offset-4">
+            Standings
+          </Link>
+          <Link href="/schedule" className="underline underline-offset-4">
+            Schedule
+          </Link>
+          <Link href="/schedule/week" className="underline underline-offset-4">
+            This week
+          </Link>
+          <Link href="/fields" className="underline underline-offset-4">
+            Fields
+          </Link>
+          <Link href="/clubs" className="underline underline-offset-4">
+            Clubs
+          </Link>
+          <Link href="/news" className="underline underline-offset-4">
+            News
+          </Link>
+          <Link href="/documents" className="underline underline-offset-4">
+            Documents
+          </Link>
+          <Link href="/history" className="underline underline-offset-4">
+            History
+          </Link>
+        </nav>
       </header>
 
-      <section className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {closures.length > 0 ? (
+        /**
+         * Field closures are site-wide news. Between October and March this is
+         * the single most useful thing the league publishes, and on the old
+         * site it is several clicks down a menu with nothing anywhere else to
+         * say that anything has changed.
+         */
+        <aside className="mt-6 rounded-lg border border-status-caution/40 bg-status-caution-bg/40 px-4 py-3 text-sm">
+          <span className="font-medium">
+            {closures.length === 1
+              ? '1 ground is closed'
+              : `${closures.length} grounds are closed`}
+          </span>
+          <span className="text-muted-foreground"> — {closures[0]?.venueName}</span>
+          {closures.length > 1 ? (
+            <span className="text-muted-foreground"> and {closures.length - 1} more</span>
+          ) : null}
+          <Link href="/fields" className="ml-2 underline">
+            Field status
+          </Link>
+        </aside>
+      ) : null}
+
+      {/* A <section> with no heading is an unnamed landmark, which a screen
+          reader announces as "region" and nothing more. */}
+      <section aria-label="League at a glance" className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label="Clubs" value={clubs.length} />
         <Stat label="Teams" value={clubs.reduce((s, c) => s + c.teamCount, 0)} />
         <Stat label="Competitions" value={competitions.length} />
@@ -83,23 +137,35 @@ export default async function HomePage() {
       <Section title="Divisions" hint="Ordered by tier. Promotion and relegation are data, not prose.">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
+            <caption className="sr-only">
+              Divisions this season, ordered by tier
+            </caption>
             <thead>
               <tr className="border-b text-left text-muted-foreground">
-                <th className="py-2 pr-4 font-medium">Division</th>
-                <th className="py-2 pr-4 font-medium">Ladder</th>
-                <th className="py-2 pr-4 font-medium">Structure</th>
-                <th className="py-2 pr-4 text-right font-medium">Teams</th>
+                {/* scope is what lets a screen reader announce "Rutland Rovers,
+                    Teams 10" instead of reading four unlabelled numbers. */}
+                <th scope="col" className="py-2 pr-4 font-medium">Division</th>
+                <th scope="col" className="py-2 pr-4 font-medium">Ladder</th>
+                <th scope="col" className="py-2 pr-4 font-medium">Structure</th>
+                <th scope="col" className="py-2 pr-4 text-right font-medium">Teams</th>
               </tr>
             </thead>
             <tbody>
               {leagues.map((c) => (
                 <tr key={c.editionId} className="border-b last:border-0">
-                  <td className="py-2 pr-4 font-medium">
-                    {c.name}
+                  <th scope="row" className="py-2 pr-4 text-left font-medium">
+                    <Link
+                      href={`/standings?season=${season?.slug}&competition=${c.slug}`}
+                      className="hover:underline"
+                    >
+                      {c.name}
+                    </Link>
                     {c.tier ? (
-                      <span className="ml-2 text-xs text-muted-foreground">tier {c.tier}</span>
+                      <span className="ml-2 text-xs font-normal text-muted-foreground">
+                        tier {c.tier}
+                      </span>
                     ) : null}
-                  </td>
+                  </th>
                   <td className="py-2 pr-4 text-muted-foreground">{c.ladderName ?? '—'}</td>
                   <td className="py-2 pr-4 text-muted-foreground">
                     {c.groupNames.length > 1 ? c.groupNames.join(' · ') : 'Single table'}
@@ -117,7 +183,12 @@ export default async function HomePage() {
           <ul className="grid gap-2 sm:grid-cols-2">
             {cups.map((c) => (
               <li key={c.editionId} className="rounded-lg border px-4 py-3 text-sm">
-                <span className="font-medium">{c.name}</span>
+                <Link
+                  href={`/cups/${c.slug}${season ? `?season=${season.slug}` : ''}`}
+                  className="font-medium hover:underline"
+                >
+                  {c.name}
+                </Link>
                 <span className="ml-2 text-muted-foreground tabular-nums">
                   {c.teamCount} {c.teamCount === 1 ? 'entry' : 'entries'}
                 </span>
@@ -166,7 +237,11 @@ export default async function HomePage() {
         <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {clubs.map((club) => (
             <li key={club.id} className="rounded-lg border px-3 py-2 text-sm">
-              <span className="font-medium">{club.name}</span>
+              {/* Every club has its own page. Listing the name as plain text
+                  here is how the old site's dead ends get recreated. */}
+              <Link href={`/clubs/${club.slug}`} className="font-medium hover:underline">
+                {club.name}
+              </Link>
               <span className="ml-2 text-muted-foreground tabular-nums">
                 {club.teamCount} {club.teamCount === 1 ? 'side' : 'sides'}
               </span>

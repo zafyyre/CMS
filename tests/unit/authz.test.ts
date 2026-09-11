@@ -161,6 +161,85 @@ describe('read-only roles stay read-only', () => {
   });
 });
 
+describe('match day', () => {
+  it('publishes fixtures, venues, results and events to everyone', () => {
+    const player = principal(orgRole('PLAYER'));
+    for (const resource of ['venue', 'fixture', 'result', 'matchEvent'] as const) {
+      expect(can(player, 'read', { type: resource }), `read ${resource}`).toBe(true);
+    }
+  });
+
+  it('lets nobody but the league office schedule or move a fixture', () => {
+    for (const role of ROLES) {
+      if (role === 'LEAGUE_ADMIN' || role === 'PLATFORM_OWNER') continue;
+      const p = principal(orgRole(role));
+      expect(can(p, 'create', { type: 'fixture' }), `${role} create fixture`).toBe(false);
+      expect(can(p, 'update', { type: 'fixture' }), `${role} update fixture`).toBe(false);
+      expect(can(p, 'update', { type: 'venue' }), `${role} update venue`).toBe(false);
+    }
+  });
+
+  describe('a team manager reporting their own score', () => {
+    const manager = principal([{ role: 'TEAM_MANAGER', scopeKind: 'TEAM', scopeId: TEAM_A }]);
+
+    it('may report on a match their team is playing in', () => {
+      expect(can(manager, 'create', { type: 'result', teamId: TEAM_A })).toBe(true);
+    });
+
+    it('may not report on somebody else\'s match', () => {
+      expect(can(manager, 'create', { type: 'result', teamId: TEAM_B })).toBe(false);
+    });
+
+    it('may not report on a match with no team attribution at all', () => {
+      // Failing closed here is what stops a scoped role reaching a resource
+      // that simply forgot to declare its owner.
+      expect(can(manager, 'create', { type: 'result' })).toBe(false);
+    });
+
+    it('may never revise a submission, its own included', () => {
+      // `result_submissions` is append-only, so update and delete are not
+      // merely withheld from clubs — they do not exist as operations. The
+      // matrix says the same thing the database says.
+      expect(can(manager, 'update', { type: 'result', teamId: TEAM_A })).toBe(false);
+      expect(can(manager, 'delete', { type: 'result', teamId: TEAM_A })).toBe(false);
+    });
+
+    it('may not record goals and cards — that is the referee\'s report', () => {
+      expect(can(manager, 'create', { type: 'matchEvent', teamId: TEAM_A })).toBe(false);
+    });
+  });
+
+  it('lets a club admin report for their own club and nobody else', () => {
+    const clubAdmin = principal([{ role: 'CLUB_ADMIN', scopeKind: 'CLUB', scopeId: CLUB_A }]);
+    expect(can(clubAdmin, 'create', { type: 'result', clubId: CLUB_A })).toBe(true);
+    expect(can(clubAdmin, 'create', { type: 'result', clubId: CLUB_B })).toBe(false);
+    expect(can(clubAdmin, 'update', { type: 'result', clubId: CLUB_A })).toBe(false);
+  });
+
+  it('keeps the discipline officer reading match events, not writing them', () => {
+    // Their write authority lands in Phase 11 on disciplinary cases. Granting
+    // it early would make the matrix claim more than the code enforces.
+    const officer = principal(orgRole('DISCIPLINE_OFFICER'));
+    expect(can(officer, 'read', { type: 'matchEvent' })).toBe(true);
+    expect(can(officer, 'create', { type: 'matchEvent' })).toBe(false);
+    expect(can(officer, 'delete', { type: 'matchEvent' })).toBe(false);
+  });
+
+  it('does not yet let a referee submit a match report', () => {
+    // Phase 10. Until assignments exist there is nothing tying a referee to a
+    // particular fixture, so the grant would mean "any referee, any match".
+    const referee = principal(orgRole('REFEREE'));
+    expect(can(referee, 'create', { type: 'result' })).toBe(false);
+    expect(can(referee, 'create', { type: 'matchEvent' })).toBe(false);
+  });
+
+  it('gates the league office behind a second factor for match-day writes too', () => {
+    const withoutMfa = principal(orgRole('LEAGUE_ADMIN'), { mfaSatisfied: false });
+    expect(can(withoutMfa, 'create', { type: 'fixture' })).toBe(false);
+    expect(can(withoutMfa, 'read', { type: 'fixture' })).toBe(true);
+  });
+});
+
 describe('self-service', () => {
   it('lets anyone read and correct their own record', () => {
     const p = principal(orgRole('PLAYER'));

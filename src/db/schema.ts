@@ -9,3 +9,7 @@ export * from './schema/tenancy';
 export * from './schema/identity';
 export * from './schema/competition';
 export * from './schema/participation';
+export * from './schema/match';
+export * from './schema/standings';
+export * from './schema/import';
+export * from './schema/content';

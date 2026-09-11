@@ -42,6 +42,22 @@ export const TENANT_TABLES = [
   'eligibility_profiles',
   'eligibility_rules',
   'person_registrations',
+  // match day — mutable state. The evidence trail beside it is append-only.
+  'municipalities',
+  'venues',
+  'venue_closures',
+  'fixtures',
+  // derived tables. Written only by the standings engine, never by hand.
+  'standings_snapshots',
+  'standings_rows',
+  // historical import staging. Ordinary tenant tables: this is a workspace,
+  // and discarding a bad batch has to be possible.
+  'import_batches',
+  'import_records',
+  'entity_aliases',
+  // published content
+  'articles',
+  'documents',
 ] as const;
 
 /**
@@ -52,8 +68,48 @@ export const TENANT_TABLES = [
  * but an application-layer rule is only as good as the code that consults it —
  * and the scenario an audit log exists to survive is precisely our own service
  * being compromised or buggy. So the database refuses too.
+ *
+ * The three match-day tables are here for the same reason in a narrower form:
+ * a reschedule history the league office can rewrite is not evidence, and a
+ * result submission that can be edited after the fact cannot show that two
+ * clubs disagreed. Corrections in these tables are new rows that supersede or
+ * retract earlier ones — see src/db/schema/match.ts.
+ *
+ * Note that this alone is not sufficient: with FOR ALL on the parent, deleting
+ * a fixture would take its evidence with it. The foreign keys from these three
+ * tables to `fixtures` are therefore NO ACTION rather than CASCADE, so
+ * PostgreSQL refuses that route too.
  */
-export const APPEND_ONLY_TABLES = ['audit_log'] as const;
+export const APPEND_ONLY_TABLES = [
+  'audit_log',
+  'fixture_changes',
+  'result_submissions',
+  'match_events',
+] as const;
+
+/**
+ * Editable while a draft; frozen the moment they are published.
+ *
+ * The rules a season was played under are part of that season's record.
+ * Changing next year's points-for-a-win must not silently rewrite 2019's final
+ * table — and "must not" is worth nothing unless something enforces it.
+ *
+ * The mechanism is the UPDATE policy's USING clause, which excludes rows whose
+ * `published_at` is set. An UPDATE aimed at a published row therefore matches
+ * NOTHING: no error, zero rows, exactly as with the append-only tables. A draft
+ * can still be edited, and can still be published, because WITH CHECK does not
+ * repeat the condition.
+ *
+ * A consequence worth stating plainly: a published row can never be updated at
+ * all, and that includes setting `deleted_at`. Published rules are permanent,
+ * and their slug stays taken. That is the intended behaviour — a rule set is
+ * versioned by creating the next one, not by editing or retiring the last.
+ *
+ * Every table listed here MUST have a `published_at` column; the migration
+ * asserts it, because a missing column would make the policy silently
+ * permissive rather than fail loudly.
+ */
+export const PUBLISHED_IMMUTABLE_TABLES = ['competition_rules'] as const;
 
 /**
  * Routing tables. These must be readable BEFORE we know which league a request
@@ -144,6 +200,41 @@ CREATE POLICY append_only_insert ON "${table}"
 `;
 }
 
+function publishedImmutablePolicy(table: string): string {
+  const predicate = 'org_id IS NOT DISTINCT FROM app_current_org()';
+  return `
+ALTER TABLE "${table}" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "${table}" FORCE ROW LEVEL SECURITY;
+
+-- Dropped in case this table was ever an ordinary tenant table, which would
+-- have granted FOR ALL and with it the power to rewrite a published rule set.
+DROP POLICY IF EXISTS tenant_isolation ON "${table}";
+
+DROP POLICY IF EXISTS published_read ON "${table}";
+CREATE POLICY published_read ON "${table}"
+  FOR SELECT TO ${APP_ROLE} USING (${predicate});
+
+DROP POLICY IF EXISTS published_insert ON "${table}";
+CREATE POLICY published_insert ON "${table}"
+  FOR INSERT TO ${APP_ROLE} WITH CHECK (${predicate});
+
+-- The whole point of this category. USING is evaluated against the row as it
+-- stands, so a published row is simply not visible to an UPDATE and the
+-- statement matches zero rows. WITH CHECK deliberately does NOT repeat the
+-- condition, because publishing is itself an update that sets published_at.
+DROP POLICY IF EXISTS published_update_draft_only ON "${table}";
+CREATE POLICY published_update_draft_only ON "${table}"
+  FOR UPDATE TO ${APP_ROLE}
+  USING (${predicate} AND published_at IS NULL)
+  WITH CHECK (${predicate});
+
+DROP POLICY IF EXISTS published_delete_draft_only ON "${table}";
+CREATE POLICY published_delete_draft_only ON "${table}"
+  FOR DELETE TO ${APP_ROLE}
+  USING (${predicate} AND published_at IS NULL);
+`;
+}
+
 function routingPolicy(table: string): string {
   const ownerColumn = table === 'organizations' ? 'id' : 'org_id';
   const predicate = `${ownerColumn} IS NOT DISTINCT FROM app_current_org()`;
@@ -173,6 +264,7 @@ export function buildPolicySql(): string {
     `GRANT EXECUTE ON FUNCTION app_current_org() TO ${APP_ROLE};`,
     ...TENANT_TABLES.map(tenantPolicy),
     ...APPEND_ONLY_TABLES.map(appendOnlyPolicy),
+    ...PUBLISHED_IMMUTABLE_TABLES.map(publishedImmutablePolicy),
     ...ROUTING_TABLES.map(routingPolicy),
   ].join('\n');
 }
@@ -180,5 +272,6 @@ export function buildPolicySql(): string {
 export const ALL_PROTECTED_TABLES: readonly string[] = [
   ...TENANT_TABLES,
   ...APPEND_ONLY_TABLES,
+  ...PUBLISHED_IMMUTABLE_TABLES,
   ...ROUTING_TABLES,
 ];
