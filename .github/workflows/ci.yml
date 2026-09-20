@@ -102,6 +102,10 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
+      # `docker logs`, not `docker compose logs`: Compose interpolates the
+      # compose file first, and POSTGRES_SUPERUSER_PASSWORD is required there.
+      # When the job fails before "Prepare environment" has written .env, the
+      # Compose form fails too and adds a second, misleading error to the run.
       - name: Database logs on failure
         if: failure()
-        run: docker compose logs postgres
+        run: docker logs cms_postgres || echo "cms_postgres was never started"
