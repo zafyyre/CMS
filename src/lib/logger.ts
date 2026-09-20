@@ -25,7 +25,8 @@ import { env } from '@/env';
 const isProduction = env.NODE_ENV === 'production';
 
 export const logger = pino({
-  level: process.env.LOG_LEVEL ?? (isProduction ? 'info' : 'debug'),
+  // Via `env`, not `process.env`: see the note on LOG_LEVEL in src/env.ts.
+  level: env.LOG_LEVEL ?? (isProduction ? 'info' : 'debug'),
 
   /**
    * Paths blanked before anything is written.

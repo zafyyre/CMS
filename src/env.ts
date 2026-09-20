@@ -42,6 +42,25 @@ export const env = createEnv({
     DEFAULT_ORG_SLUG: z.string().min(1).default('demo'),
 
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+
+    /**
+     * Pino's level, validated against pino's own set rather than left as a free
+     * string. It has no default here on purpose: the fallback depends on
+     * NODE_ENV, so `src/lib/logger.ts` applies it.
+     *
+     * Why it is in this file at all. It used to be read as
+     * `process.env.LOG_LEVEL ?? …` inside the logger, and `??` only falls back
+     * on null/undefined — so the empty `LOG_LEVEL=` that `.env.example` ships
+     * reached pino verbatim and threw `default level: must be included in
+     * custom levels`. That failed `next build` at page-data collection for the
+     * one route importing the logger, which is to say it failed CI and every
+     * fresh clone's first build. Going through `createEnv` fixes it twice over:
+     * `emptyStringAsUndefined` turns `''` into `undefined`, and a bad value now
+     * names itself at boot instead of surfacing as a pino internal error.
+     */
+    LOG_LEVEL: z
+      .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
+      .optional(),
   },
 
   runtimeEnv: {
@@ -54,6 +73,7 @@ export const env = createEnv({
     BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
     DEFAULT_ORG_SLUG: process.env.DEFAULT_ORG_SLUG,
     NODE_ENV: process.env.NODE_ENV,
+    LOG_LEVEL: process.env.LOG_LEVEL,
   },
 
   /**
