@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { leagueThemeStyle } from '@/components/league-theme';
 import { StatusPill, type StatusTone } from '@/components/status-pill';
 import { formatKickoffTime, leagueDateKey } from '@/lib/time';
 import { getCurrentSeason } from '@/server/services/competition';
@@ -62,7 +61,7 @@ export default async function SchedulePage() {
   const days = groupByLeagueDay(fixtures, league.timezone);
 
   return (
-    <main id="main" className="mx-auto max-w-5xl px-6 py-10" style={leagueThemeStyle(league.theme)}>
+    <main id="main" className="mx-auto max-w-5xl px-6 py-10">
       <header className="border-b pb-6">
         <Link href="/" className="text-xs font-medium uppercase tracking-widest text-muted-foreground hover:underline">
           {league.shortName ?? league.slug}

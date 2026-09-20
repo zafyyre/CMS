@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { leagueThemeStyle } from '@/components/league-theme';
 import { StatusPill } from '@/components/status-pill';
 import {
   countEntries,
@@ -56,7 +55,7 @@ export default async function HomePage() {
   return (
     // The league seeds only hue and chroma; lightness stays fixed so a league
     // cannot pick a brand colour that breaks contrast for its own members.
-    <main id="main" className="mx-auto max-w-5xl px-6 py-10" style={leagueThemeStyle(league.theme)}>
+    <main id="main" className="mx-auto max-w-5xl px-6 py-10">
       <header className="border-b pb-6">
         <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
           {league.shortName ?? league.slug}

@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { leagueThemeStyle } from '@/components/league-theme';
 import { StatusPill } from '@/components/status-pill';
 import { formatKickoff } from '@/lib/time';
 import { listVenues, type VenueSummary } from '@/server/services/venues';
@@ -44,7 +43,7 @@ export default async function FieldsPage() {
   const byMunicipality = groupByMunicipality(venues);
 
   return (
-    <main id="main" className="mx-auto max-w-5xl px-6 py-10" style={leagueThemeStyle(league.theme)}>
+    <main id="main" className="mx-auto max-w-5xl px-6 py-10">
       <header className="border-b pb-6">
         <Link
           href="/"

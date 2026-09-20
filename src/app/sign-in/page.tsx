@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { SignInForm } from '@/components/auth/sign-in-form';
-import { leagueThemeStyle } from '@/components/league-theme';
 import { safeNext } from '@/lib/safe-next';
 import { getPrincipal } from '@/server/auth/principal';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
@@ -37,7 +36,6 @@ export default async function SignInPage({ searchParams }: PageProps) {
     <main
       id="main"
       className="mx-auto flex w-full max-w-sm flex-col justify-center px-6 py-16"
-      style={leagueThemeStyle(league?.theme)}
     >
       <Link
         href="/"

@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { leagueThemeStyle } from '@/components/league-theme';
 import { StandingsTable } from '@/components/standings-table';
 import { StatusPill } from '@/components/status-pill';
 import { getCurrentSeason, listCompetitions } from '@/server/services/competition';
@@ -170,7 +169,7 @@ function Shell({
   children: React.ReactNode;
 }) {
   return (
-    <main id="main" className="mx-auto max-w-5xl px-6 py-10" style={leagueThemeStyle(league.theme)}>
+    <main id="main" className="mx-auto max-w-5xl px-6 py-10">
       <header className="border-b pb-6">
         <Link
           href="/"

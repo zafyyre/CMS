@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { leagueThemeStyle } from '@/components/league-theme';
 import { ServiceWorker } from '@/components/service-worker';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
 import './globals.css';
@@ -59,15 +60,38 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  /**
+   * The league's accent is seeded HERE, on `<html>`, and nowhere else.
+   *
+   * It used to be spread onto each page's own `<main>` — 17 call sites — where
+   * it could not work. CSS substitutes `var()` inside a custom property at
+   * computed-value time *on the element carrying the declaration*, and every
+   * token derived from the accent (`--primary`, `--ring`, `--chart-*`) is
+   * declared on `:root`. Descendants therefore inherit an already-substituted
+   * value, so overriding `--accent-hue` further down the tree changed nothing.
+   * Per-league theming had never once had a visible effect.
+   *
+   * On `<html>` the override lands on the same element the tokens are declared
+   * on, so the derivation actually sees it. It also brings the skip link and
+   * anything portalled to `document.body` inside the themed subtree, and it is
+   * a prerequisite for the shared header and footer Phase 6.5 adds: chrome
+   * rendered in this layout would otherwise sit outside the accent's scope.
+   *
+   * `getCurrentLeague()` is wrapped in React `cache()`, so sharing it with
+   * `generateMetadata()` above costs one query per request, not two.
+   */
+  const league = await getCurrentLeague();
+
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      style={leagueThemeStyle(league?.theme)}
     >
       <body className="min-h-full flex flex-col">
         {/* First focusable element on every page: a table of forty rows is a

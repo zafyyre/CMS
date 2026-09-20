@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { leagueThemeStyle } from '@/components/league-theme';
 import { StatusPill } from '@/components/status-pill';
 import { formatKickoff } from '@/lib/time';
 import { getCurrentSeason } from '@/server/services/competition';
@@ -66,7 +65,7 @@ export default async function CupPage({ params, searchParams }: PageProps) {
   }
 
   return (
-    <main id="main" className="mx-auto max-w-4xl px-6 py-10" style={leagueThemeStyle(league.theme)}>
+    <main id="main" className="mx-auto max-w-4xl px-6 py-10">
       <nav className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
         <Link href="/" className="hover:underline">
           {league.shortName ?? league.slug}

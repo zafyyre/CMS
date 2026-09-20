@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { leagueThemeStyle } from '@/components/league-theme';
 import { type DocumentSummary, listDocuments } from '@/server/services/content';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
 
@@ -26,7 +25,7 @@ export default async function DocumentsPage() {
   const grouped = groupByCategory(documents);
 
   return (
-    <main id="main" className="mx-auto max-w-3xl px-6 py-10" style={leagueThemeStyle(league.theme)}>
+    <main id="main" className="mx-auto max-w-3xl px-6 py-10">
       <nav className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
         <Link href="/" className="hover:underline">
           {league.shortName ?? league.slug}

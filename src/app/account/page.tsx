@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { EnrolTwoFactor } from '@/components/auth/enrol-two-factor';
 import { SignOutButton } from '@/components/auth/sign-out-button';
-import { leagueThemeStyle } from '@/components/league-theme';
 import { StatusPill } from '@/components/status-pill';
 import { auth } from '@/server/auth';
 import { getPrincipal } from '@/server/auth/principal';
@@ -39,7 +38,6 @@ export default async function AccountPage() {
     <main
       id="main"
       className="mx-auto max-w-2xl px-6 py-10"
-      style={leagueThemeStyle(league?.theme)}
     >
       <nav className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
         <Link href="/" className="hover:underline">

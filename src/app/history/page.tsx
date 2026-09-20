@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { leagueThemeStyle } from '@/components/league-theme';
 import { listHonoursBoard } from '@/server/services/competition';
 import { listSeasons } from '@/server/services/directory';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
@@ -37,7 +36,7 @@ export default async function HistoryPage() {
   const personHonours = honours.filter((h) => h.recipientKind === 'PERSON');
 
   return (
-    <main id="main" className="mx-auto max-w-3xl px-6 py-10" style={leagueThemeStyle(league.theme)}>
+    <main id="main" className="mx-auto max-w-3xl px-6 py-10">
       <nav className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
         <Link href="/" className="hover:underline">
           {league.shortName ?? league.slug}

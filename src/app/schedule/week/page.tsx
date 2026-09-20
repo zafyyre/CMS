@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { leagueThemeStyle } from '@/components/league-theme';
 import { StatusPill } from '@/components/status-pill';
 import { formatKickoffTime, leagueDateKey, leagueDayBounds } from '@/lib/time';
 import { type FixtureView, listFixtures } from '@/server/services/fixtures';
@@ -53,7 +52,7 @@ export default async function ScheduleWeekPage({ searchParams }: PageProps) {
   const days = groupByDay(fixtures, league.timezone);
 
   return (
-    <main id="main" className="mx-auto max-w-4xl px-6 py-10" style={leagueThemeStyle(league.theme)}>
+    <main id="main" className="mx-auto max-w-4xl px-6 py-10">
       <nav className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
         <Link href="/" className="hover:underline">
           {league.shortName ?? league.slug}

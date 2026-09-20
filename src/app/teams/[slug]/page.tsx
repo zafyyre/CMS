@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { leagueThemeStyle } from '@/components/league-theme';
 import { StatusPill } from '@/components/status-pill';
 import { serializeJsonLd } from '@/lib/json-ld';
 import { formatKickoff } from '@/lib/time';
@@ -72,7 +71,7 @@ export default async function TeamPage({ params }: PageProps) {
   };
 
   return (
-    <main id="main" className="mx-auto max-w-3xl px-6 py-10" style={leagueThemeStyle(league.theme)}>
+    <main id="main" className="mx-auto max-w-3xl px-6 py-10">
       <script
         type="application/ld+json"
         // Escaped for a script context. See src/lib/json-ld.ts — plain

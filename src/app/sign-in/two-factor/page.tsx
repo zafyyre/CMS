@@ -1,7 +1,5 @@
 import { TwoFactorForm } from '@/components/auth/two-factor-form';
-import { leagueThemeStyle } from '@/components/league-theme';
 import { safeNext } from '@/lib/safe-next';
-import { getCurrentLeague } from '@/server/tenancy/current-league';
 
 /**
  * The second factor.
@@ -25,7 +23,6 @@ interface PageProps {
 }
 
 export default async function TwoFactorPage({ searchParams }: PageProps) {
-  const league = await getCurrentLeague();
   const { next } = await searchParams;
   const destination = safeNext(next);
 
@@ -33,7 +30,6 @@ export default async function TwoFactorPage({ searchParams }: PageProps) {
     <main
       id="main"
       className="mx-auto flex w-full max-w-sm flex-col justify-center px-6 py-16"
-      style={leagueThemeStyle(league?.theme)}
     >
       <h1 className="text-2xl font-semibold tracking-tight">Two-factor authentication</h1>
       <p className="mt-2 text-sm text-muted-foreground">

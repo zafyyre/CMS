@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { SignOutButton } from '@/components/auth/sign-out-button';
-import { leagueThemeStyle } from '@/components/league-theme';
 import { StatusPill } from '@/components/status-pill';
 import { auth } from '@/server/auth';
 import { getPrincipal } from '@/server/auth/principal';
@@ -60,7 +59,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const mfaOutstanding = principalRequiresMfa(principal) && !session?.user.twoFactorEnabled;
 
   return (
-    <div style={leagueThemeStyle(league?.theme)}>
+    <div>
       <header className="border-b">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-6 py-3">
           <Link href="/" className="text-xs font-medium uppercase tracking-widest text-muted-foreground hover:underline">
