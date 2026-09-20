@@ -158,9 +158,26 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  /* `var(--font-geist-sans)`, NOT `var(--font-sans)`.
+   *
+   * These read themselves until 2026-09-20, which made them invalid at
+   * computed-value time — and because the base layer applies
+   * `html { @apply font-sans }`, `font-family` resolved to nothing and fell
+   * back to the browser's INITIAL value, a serif. So the entire application
+   * rendered in Times New Roman, and the rule was worse than no rule at all:
+   * without it, Tailwind's preflight would at least have supplied a sans
+   * stack. Geist was loaded in layout.tsx the whole time and never applied.
+   *
+   * next/font exposes the variable named in layout.tsx — `--font-geist-sans`,
+   * one word away from the token that consumes it, which is how this survived
+   * review. The explicit fallback chain means a future breakage degrades to a
+   * system sans rather than back to serif.
+   *
+   * Phase 6.5 replaces this stack with Zoosh's and stops loading a webfont
+   * altogether (plan.md 6.5.13 #2). This is the defect fix, not that change. */
+  --font-sans: var(--font-geist-sans, ui-sans-serif, system-ui, sans-serif);
+  --font-mono: var(--font-geist-mono, ui-monospace, monospace);
+  --font-heading: var(--font-geist-sans, ui-sans-serif, system-ui, sans-serif);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
