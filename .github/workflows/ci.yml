@@ -21,16 +21,34 @@ jobs:
       # machine cannot drift onto different patch releases. `node-version: 22`
       # resolved to whatever the latest 22.x was at the moment each job ran,
       # which is not the same thing as the version the image was built on.
+      #
+      # `cache: npm` is deliberately NOT set here. The action would run
+      # `npm config get cache` to locate the cache directory, and it runs it
+      # with the npm that ships with Node — 10.9.8 — before the upgrade below
+      # has had a chance to happen. package.json's `devEngines` refuses that
+      # npm with EBADDEVENGINES, so the action itself fails. The cache is
+      # restored a step later instead, once the right npm is in place.
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
-          cache: npm
 
       # Node 22 LTS bundles npm 10.9.8, which rejects a lockfile written by
       # npm 11. Rather than constrain the development machine to a version with
       # a known unfixed install crash (npm/cli#9787), one npm runs everywhere —
       # see the note in the Dockerfile and `devEngines` in package.json.
+      # A global install is not gated by devEngines, which is what makes this
+      # step able to run at all.
       - run: npm i -g npm@11.6.2
+
+      # What `cache: npm` above would have done, but after the upgrade. Keyed on
+      # the lockfile, so a dependency change invalidates it and nothing else
+      # does.
+      - name: Cache npm downloads
+        uses: actions/cache@v6
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
+          restore-keys: ${{ runner.os }}-npm-
 
       - run: npm ci
 
