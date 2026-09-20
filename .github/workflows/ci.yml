@@ -22,15 +22,18 @@ jobs:
       # resolved to whatever the latest 22.x was at the moment each job ran,
       # which is not the same thing as the version the image was built on.
       #
-      # `cache: npm` is deliberately NOT set here. The action would run
-      # `npm config get cache` to locate the cache directory, and it runs it
-      # with the npm that ships with Node — 10.9.8 — before the upgrade below
-      # has had a chance to happen. package.json's `devEngines` refuses that
-      # npm with EBADDEVENGINES, so the action itself fails. The cache is
-      # restored a step later instead, once the right npm is in place.
+      # `package-manager-cache: false` is load-bearing, and dropping `cache: npm`
+      # alone is NOT enough: v7 auto-detects npm from package.json and enables
+      # caching anyway, then runs `npm config get cache` to locate the cache
+      # directory — with the npm that ships with Node, 10.9.8, before the
+      # upgrade below can happen. `devEngines` refuses that npm with
+      # EBADDEVENGINES and the action itself exits non-zero, before any project
+      # step runs. The cache is restored explicitly below instead, once the
+      # right npm is in place.
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
+          package-manager-cache: false
 
       # Node 22 LTS bundles npm 10.9.8, which rejects a lockfile written by
       # npm 11. Rather than constrain the development machine to a version with
