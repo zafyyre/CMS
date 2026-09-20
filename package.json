@@ -2,6 +2,16 @@
   "name": "app",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=22.16.0 <23"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "version": "^11.6.2",
+      "onFail": "error"
+    }
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -25,14 +35,14 @@
   },
   "//overrides": [
     "drizzle-kit depends on the deprecated @esbuild-kit/* packages, which pin an",
-    "esbuild older than 0.25 — the version with GHSA-67mh-4wv8-2f99 (any website",
+    "esbuild older than 0.25 \u2014 the version with GHSA-67mh-4wv8-2f99 (any website",
     "can issue requests to esbuild's DEV SERVER and read the response).",
     "",
     "drizzle-kit is a devDependency and never starts that dev server, so nothing",
     "here was actually exposed. It is overridden anyway so `npm audit` stays",
     "clean and a real advisory is never buried under a known-noisy one.",
     "",
-    "npm's own suggested fix is `drizzle-kit@0.18.1` — a DOWNGRADE from 0.31.10",
+    "npm's own suggested fix is `drizzle-kit@0.18.1` \u2014 a DOWNGRADE from 0.31.10",
     "that predates the `dialect`/`url` config this project uses, and would break",
     "every migration. Do not run `npm audit fix --force` here."
   ],
@@ -59,7 +69,7 @@
   "devDependencies": {
     "@playwright/test": "^1.62.0",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^22",
     "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "dotenv": "^17.4.2",

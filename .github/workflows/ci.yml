@@ -26,6 +26,12 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
+      # Node 22 LTS bundles npm 10.9.8, which rejects a lockfile written by
+      # npm 11. Rather than constrain the development machine to a version with
+      # a known unfixed install crash (npm/cli#9787), one npm runs everywhere —
+      # see the note in the Dockerfile and `devEngines` in package.json.
+      - run: npm i -g npm@11.6.2
+
       - run: npm ci
 
       # Compose is used rather than GitHub's `services:` block so CI exercises

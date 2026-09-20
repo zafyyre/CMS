@@ -11,9 +11,26 @@
 # are deliberately not referenced here. A deployed environment gets managed
 # instances of both, injected as POSTGRES_URL and REDIS_URL.
 
+# Pinned, not `22-alpine`: a floating tag resolved at image-build time while CI
+# resolved its own Node independently, so the two could run different patch
+# releases with nothing saying so. KEEP IN SYNC WITH .nvmrc — Docker cannot read
+# that file from a FROM line, so this is the one place the value is duplicated.
+ARG NODE_VERSION=22.23.2
+
+# Overriding the bundled npm is deliberate. Node 22 LTS ships npm 10.9.8, and a
+# lockfile written by npm 11 is rejected outright by npm 10 (EUSAGE, missing
+# @emnapi/* entries) — which is what broke CI for a month. One npm version now
+# runs everywhere: here, in CI, and on the development machine, where
+# package.json's `devEngines` enforces it. Exact rather than a range, so an
+# image build is reproducible.
+ARG NPM_VERSION=11.6.2
+
 # --- dependencies ------------------------------------------------------------
-FROM node:22-alpine AS deps
+FROM node:${NODE_VERSION}-alpine AS deps
+ARG NPM_VERSION
 WORKDIR /app
+
+RUN npm i -g npm@${NPM_VERSION}
 
 # Only the manifests, so this layer is cached until a dependency actually
 # changes rather than on every source edit.
@@ -21,8 +38,14 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 # --- build -------------------------------------------------------------------
-FROM node:22-alpine AS builder
+FROM node:${NODE_VERSION}-alpine AS builder
+ARG NPM_VERSION
 WORKDIR /app
+
+# Also here, not only in `deps`. `devEngines` with onFail:error refuses EVERY
+# npm command, `npm run build` included, so a builder stage on the bundled npm
+# 10 fails the build outright rather than merely warning.
+RUN npm i -g npm@${NPM_VERSION}
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -36,7 +59,8 @@ ENV SKIP_ENV_VALIDATION=1
 RUN npm run build
 
 # --- runtime -----------------------------------------------------------------
-FROM node:22-alpine AS runner
+# No npm in the runtime stage at all, by design — see the header.
+FROM node:${NODE_VERSION}-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
