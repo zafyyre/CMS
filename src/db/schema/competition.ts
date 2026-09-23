@@ -1,6 +1,7 @@
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import {
   boolean,
+  check,
   date,
   foreignKey,
   index,
@@ -8,6 +9,7 @@ import {
   jsonb,
   pgTable,
   text,
+  timestamp,
   unique,
   uuid,
 } from 'drizzle-orm/pg-core';
@@ -19,6 +21,7 @@ import {
   progressionKindEnum,
   seasonStatusEnum,
   stageFormatEnum,
+  tieBreakerEnum,
   tieBreakMethodEnum,
 } from './enums';
 import { organizations } from './tenancy';
@@ -153,6 +156,91 @@ export const seasons = pgTable(
     index('seasons_org_status_idx').on(t.orgId, t.status),
   ],
 );
+
+// ---------------------------------------------------------------------------
+// Rules — versioned, and frozen once published
+// ---------------------------------------------------------------------------
+
+/**
+ * How a table is decided: what a win is worth, and what happens when two teams
+ * finish level.
+ *
+ * This is the highest-consequence configuration in the product. A wrong
+ * tiebreaker order does not throw an error — it puts the wrong team in the
+ * play-offs, in public, and nobody notices until a coach does the arithmetic
+ * by hand. So it is DATA, versioned, and attached to a competition rather than
+ * written into a query where nobody can find it or diff it.
+ *
+ * ── FROZEN ONCE PUBLISHED ───────────────────────────────────────────────────
+ * `publishedAt` is not decoration. The rules a season was played under are part
+ * of that season's record: changing next year's points-for-a-win must not
+ * silently rewrite 2019's final table. So once `publishedAt` is set the row
+ * becomes immutable — and that is enforced by a row-level security policy whose
+ * USING clause excludes published rows, not by a service remembering to check.
+ * A new season that wants different rules gets a NEW row.
+ *
+ * Editing a published row is therefore not "discouraged"; it matches zero rows.
+ * See src/db/policies.ts.
+ * ────────────────────────────────────────────────────────────────────────────
+ */
+export const competitionRules = pgTable(
+  'competition_rules',
+  {
+    id: primaryId(),
+    orgId: uuid('org_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(), // "League — three points for a win"
+    slug: text('slug').notNull(),
+
+    pointsForWin: integer('points_for_win').notNull().default(3),
+    pointsForDraw: integer('points_for_draw').notNull().default(1),
+    pointsForLoss: integer('points_for_loss').notNull().default(0),
+
+    /**
+     * Applied in array order after points. Postgres keeps the order, which is
+     * the entire reason this is an array and not a set of boolean columns.
+     */
+    tieBreakers: tieBreakerEnum('tie_breakers')
+      .array()
+      .notNull()
+      .default(['GOAL_DIFFERENCE', 'GOALS_FOR', 'HEAD_TO_HEAD_POINTS', 'WINS']),
+
+    /** The scoreline awarded when a team fails to appear. Commonly 3–0. */
+    forfeitWinnerGoals: integer('forfeit_winner_goals').notNull().default(3),
+    forfeitLoserGoals: integer('forfeit_loser_goals').notNull().default(0),
+    /** Whether a forfeited match counts in the played column. Usually yes. */
+    forfeitCountsAsPlayed: boolean('forfeit_counts_as_played').notNull().default(true),
+
+    /** Weights for the DISCIPLINE_POINTS tiebreaker, where a league uses it. */
+    yellowCardPoints: integer('yellow_card_points').notNull().default(1),
+    redCardPoints: integer('red_card_points').notNull().default(3),
+
+    /** Set once. From then on the row cannot be updated at all. */
+    publishedAt: timestamp('published_at', { withTimezone: true }),
+    notes: text('notes'),
+    ...timestamps,
+  },
+  (t) => [
+    unique('competition_rules_org_id_key').on(t.orgId, t.id),
+    liveUnique('competition_rules_org_slug_unique', t.orgId, t.slug),
+    check(
+      'competition_rules_points_ordered',
+      // A draw worth more than a win inverts every table in the league.
+      sql`points_for_win >= points_for_draw AND points_for_draw >= points_for_loss`,
+    ),
+    check(
+      'competition_rules_forfeit_scoreline',
+      sql`forfeit_winner_goals >= 0 AND forfeit_loser_goals >= 0
+          AND forfeit_winner_goals >= forfeit_loser_goals`,
+    ),
+    check(
+      'competition_rules_discipline_weights',
+      sql`yellow_card_points >= 0 AND red_card_points >= 0`,
+    ),
+  ],
+);
+
 
 // ---------------------------------------------------------------------------
 // Structure
@@ -290,6 +378,13 @@ export const competitionEditions = pgTable(
       foreignColumns: [seasons.orgId, seasons.id],
       name: 'competition_editions_season_fk',
     }).onDelete('cascade'),
+    // NO ACTION: a rules row a season was played under cannot be removed while
+    // that season still points at it. See the note on competition_series.
+    foreignKey({
+      columns: [t.orgId, t.rulesId],
+      foreignColumns: [competitionRules.orgId, competitionRules.id],
+      name: 'competition_editions_rules_fk',
+    }),
     liveUnique('competition_editions_season_slug_unique', t.seasonId, t.slug),
     index('competition_editions_org_season_idx').on(t.orgId, t.seasonId),
     index('competition_editions_series_idx').on(t.seriesId),
@@ -335,6 +430,16 @@ export const stages = pgTable(
       foreignColumns: [competitionEditions.orgId, competitionEditions.id],
       name: 'stages_edition_fk',
     }).onDelete('cascade'),
+    /**
+     * A stage may override its edition's rules — a cup's group phase counting
+     * points differently from the knockout that follows it. Resolution order is
+     * stage, then edition; see resolveRules() in src/server/standings.
+     */
+    foreignKey({
+      columns: [t.orgId, t.rulesId],
+      foreignColumns: [competitionRules.orgId, competitionRules.id],
+      name: 'stages_rules_fk',
+    }),
     // Partial: removing a stage must free its ordinal, or restructuring a
     // competition mid-planning would leave permanent gaps in the sequence.
     liveUnique('stages_edition_ordinal_unique', t.editionId, t.ordinal),

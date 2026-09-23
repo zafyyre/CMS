@@ -4,6 +4,7 @@ import {
   date,
   foreignKey,
   index,
+  integer,
   pgTable,
   text,
   timestamp,
@@ -45,6 +46,21 @@ export const users = pgTable(
     email: text('email').notNull().unique(),
     emailVerified: boolean('email_verified').notNull().default(false),
     image: text('image'),
+
+    /**
+     * Sign in with this instead of an email address.
+     *
+     * Normalised to lower case, so `RRovers` and `rrovers` cannot both be
+     * registered — the unique constraint is what enforces that, and it is on
+     * the normalised column for exactly that reason. `displayUsername` keeps
+     * the spelling the person chose and is what the interface shows back.
+     *
+     * Nullable: accounts created before usernames existed, and anyone who only
+     * ever wants to use their email address, have none.
+     */
+    username: text('username').unique(),
+    displayUsername: text('display_username'),
+
     twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -109,13 +125,44 @@ export const verifications = pgTable(
   (t) => [index('verifications_identifier_idx').on(t.identifier)],
 );
 
-/** TOTP second factor. Required for admin-tier roles before any write. */
+/**
+ * TOTP second factor. Required for admin-tier roles before any write.
+ *
+ * `verified` distinguishes an enrolment that has been STARTED from one that has
+ * been completed: better-auth writes the row when the secret is generated, and
+ * flips this once the user proves they can produce a code from it. Without the
+ * distinction, an administrator who opened the enrolment screen and walked away
+ * would be treated as having a second factor they cannot actually supply —
+ * locked out of their own account by a half-finished form.
+ *
+ * The column was missing until the enrolment screen was built and immediately
+ * failed on it, which is the honest argument for building the screen: a table
+ * created from a library's documentation and never exercised is a table nobody
+ * has checked.
+ */
 export const twoFactors = pgTable(
   'two_factors',
   {
     id: text('id').primaryKey(),
     secret: text('secret').notNull(),
     backupCodes: text('backup_codes').notNull(),
+    /** Defaults true so rows written before this column existed still work. */
+    verified: boolean('verified').notNull().default(true),
+
+    /**
+     * Brute-force protection on the second factor, and the reason this gap
+     * mattered rather than merely erroring.
+     *
+     * A six-digit TOTP has a million values and a thirty-second window. Without
+     * a lockout, an attacker holding a stolen password can simply keep
+     * guessing — and the second factor, which exists precisely for the case
+     * where the password is already lost, becomes a speed bump. better-auth
+     * counts failures and locks the factor; both columns have to exist for it
+     * to do so.
+     */
+    failedVerificationCount: integer('failed_verification_count').notNull().default(0),
+    lockedUntil: timestamp('locked_until', { withTimezone: true }),
+
     userId: text('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),

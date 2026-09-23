@@ -46,5 +46,5 @@ export const config = {
    * `/clubs/rutland-rovers.png` matched the exclusion and skipped middleware,
    * so nothing stamped a request id and nothing normalised the host.
    */
-  matcher: ['/((?!_next/static|_next/image|favicon\\.ico).*)'],
+  matcher: ['/((?!_next/static|_next/image).*)'],
 };

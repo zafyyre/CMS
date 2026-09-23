@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   pull_request:
 
 concurrency:
@@ -15,12 +15,43 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      # Node comes from .nvmrc so this file, the Dockerfile and a developer's
+      # machine cannot drift onto different patch releases. `node-version: 22`
+      # resolved to whatever the latest 22.x was at the moment each job ran,
+      # which is not the same thing as the version the image was built on.
+      #
+      # `package-manager-cache: false` is load-bearing, and dropping `cache: npm`
+      # alone is NOT enough: v7 auto-detects npm from package.json and enables
+      # caching anyway, then runs `npm config get cache` to locate the cache
+      # directory — with the npm that ships with Node, 10.9.8, before the
+      # upgrade below can happen. `devEngines` refuses that npm with
+      # EBADDEVENGINES and the action itself exits non-zero, before any project
+      # step runs. The cache is restored explicitly below instead, once the
+      # right npm is in place.
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
-          cache: npm
+          node-version-file: .nvmrc
+          package-manager-cache: false
+
+      # Node 22 LTS bundles npm 10.9.8, which rejects a lockfile written by
+      # npm 11. Rather than constrain the development machine to a version with
+      # a known unfixed install crash (npm/cli#9787), one npm runs everywhere —
+      # see the note in the Dockerfile and `devEngines` in package.json.
+      # A global install is not gated by devEngines, which is what makes this
+      # step able to run at all.
+      - run: npm i -g npm@11.6.2
+
+      # What `cache: npm` above would have done, but after the upgrade. Keyed on
+      # the lockfile, so a dependency change invalidates it and nothing else
+      # does.
+      - name: Cache npm downloads
+        uses: actions/cache@v6
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
+          restore-keys: ${{ runner.os }}-npm-
 
       - run: npm ci
 
@@ -51,7 +82,7 @@ jobs:
             fi
             sleep 2
           done
-          echo "postgres never became healthy"; docker compose logs postgres; exit 1
+          echo "postgres never became healthy"; docker logs cms_postgres || true; exit 1
 
       # Each run also re-asserts against pg_catalog that app_user is powerless,
       # owns nothing, that every org_id table has FORCEd RLS, and that the audit
@@ -80,6 +111,32 @@ jobs:
       - name: Build
         run: npm run build
 
+      # The e2e suite runs against the PRODUCTION build and needs data, so the
+      # database is seeded first. This is the layer the integration tests
+      # structurally cannot reach: they call services directly, so a page that
+      # throws on render or a Server Action never wired to its form passes every
+      # one of them and fails the first human.
+      - name: Seed for end-to-end tests
+        run: npm run db:seed:reset
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        run: npm run test:e2e
+
+      - name: Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+      # `docker logs`, not `docker compose logs`: Compose interpolates the
+      # compose file first, and POSTGRES_SUPERUSER_PASSWORD is required there.
+      # When the job fails before "Prepare environment" has written .env, the
+      # Compose form fails too and adds a second, misleading error to the run.
       - name: Database logs on failure
         if: failure()
-        run: docker compose logs postgres
+        run: docker logs cms_postgres || echo "cms_postgres was never started"

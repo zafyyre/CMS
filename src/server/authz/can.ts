@@ -110,8 +110,8 @@ function scopeCovers(grant: ScopedRole, resource: ResourceRef): boolean {
 }
 
 export class ForbiddenError extends Error {
-  constructor(action: Action, resource: Resource) {
-    super(`Not permitted to ${action} ${resource}`);
+  constructor(action: Action, resource: Resource, detail?: string) {
+    super(`Not permitted to ${action} ${resource}${detail ? `: ${detail}` : ''}`);
     this.name = 'ForbiddenError';
   }
 }

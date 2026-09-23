@@ -163,6 +163,91 @@ export async function createLeagueFixture(slug: string): Promise<LeagueFixture> 
   };
 }
 
+export interface MatchDayFixture {
+  municipalityId: string;
+  venueId: string;
+  opponentClubId: string;
+  opponentTeamId: string;
+  opponentEntryId: string;
+  fixtureId: string;
+}
+
+/**
+ * A venue and a real fixture between two teams, layered onto a league.
+ *
+ * Kept separate from `createLeagueFixture` rather than folded into it: the
+ * cross-tenant isolation suite asserts "exactly one row per table" as its
+ * proof that the other league's identical row is invisible, and a second team
+ * would quietly turn that into a weaker assertion.
+ */
+export async function createMatchDayFixture(league: LeagueFixture): Promise<MatchDayFixture> {
+  const { orgId, slug } = league;
+  const municipalityId = uuidv7();
+  const venueId = uuidv7();
+  const opponentClubId = uuidv7();
+  const opponentTeamId = uuidv7();
+  const opponentEntryId = uuidv7();
+  const fixtureId = uuidv7();
+
+  await rootDb.insert(schema.municipalities).values({
+    id: municipalityId,
+    orgId,
+    code: slug.slice(0, 3).toUpperCase(),
+    name: `${slug} City`,
+  });
+
+  await rootDb.insert(schema.venues).values({
+    id: venueId,
+    orgId,
+    municipalityId,
+    name: `${slug} Park`,
+    slug: `${slug}-park`,
+    surface: 'GRASS',
+  });
+
+  await rootDb
+    .insert(schema.clubs)
+    .values({ id: opponentClubId, orgId, name: `${slug} Athletic`, slug: `${slug}-athletic` });
+
+  await rootDb.insert(schema.teams).values({
+    id: opponentTeamId,
+    orgId,
+    clubId: opponentClubId,
+    name: `${slug} Athletic`,
+    slug: `${slug}-athletic`,
+  });
+
+  await rootDb.insert(schema.editionEntries).values({
+    id: opponentEntryId,
+    orgId,
+    editionId: league.editionId,
+    teamId: opponentTeamId,
+    status: 'ACTIVE',
+  });
+
+  await rootDb.insert(schema.fixtures).values({
+    id: fixtureId,
+    orgId,
+    stageGroupId: league.stageGroupId,
+    homeEntryId: league.entryId,
+    awayEntryId: opponentEntryId,
+    venueId,
+    // 14:00 in Vancouver on an ordinary October Saturday.
+    kickoffAt: new Date('2025-10-04T21:00:00.000Z'),
+    matchday: 1,
+    status: 'SCHEDULED',
+  });
+
+  return {
+    municipalityId,
+    venueId,
+    opponentClubId,
+    opponentTeamId,
+    opponentEntryId,
+    fixtureId,
+  };
+}
+
 export async function truncateAll(): Promise<void> {
   const target = await rootPool.query<{ database: string }>(
     'select current_database() as database',
@@ -171,10 +256,16 @@ export async function truncateAll(): Promise<void> {
 
   await rootPool.query(`
     TRUNCATE TABLE
+      articles, documents,
+      entity_aliases, import_records, import_batches,
+      standings_rows, standings_snapshots,
+      match_events, result_submissions, fixture_changes, fixtures,
+      venue_closures, venues, municipalities,
       person_registrations, stage_group_entries, edition_entries,
       eligibility_rules, eligibility_profiles, teams, clubs,
       honour_awards, honours, progression_rules, stage_entry_sources,
       stage_groups, stages, competition_editions, competition_series,
+      competition_rules,
       ladders, seasons, registration_years, governing_bodies,
       consents, guardianships, role_grants, persons,
       audit_log, org_domains, organizations,
