@@ -122,7 +122,7 @@ export default async function SchedulePage() {
                 <tbody>
                   {dayFixtures.map((fixture) => (
                     <tr key={fixture.id} className="border-b last:border-0 align-top">
-                      <td className="py-2 pr-4 tabular-nums whitespace-nowrap">
+                      <td className="py-2 pr-4 whitespace-nowrap">
                         {fixture.kickoffAt
                           ? formatKickoffTime(fixture.kickoffAt, league.timezone)
                           : '—'}
@@ -167,7 +167,7 @@ function ResultCell({ fixture }: { fixture: FixtureView }) {
   if (result.state === 'CONFIRMED' && result.scoreline) {
     const { homeScore, awayScore, homePenalties, awayPenalties } = result.scoreline;
     return (
-      <span className="tabular-nums font-medium" title={result.basis}>
+      <span className="font-medium" title={result.basis}>
         {homeScore ?? '–'}–{awayScore ?? '–'}
         {homePenalties !== null && awayPenalties !== null ? (
           <span className="ml-1 text-xs font-normal text-muted-foreground">

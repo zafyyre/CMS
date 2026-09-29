@@ -79,7 +79,7 @@ export default async function AdminFixturesPage() {
               <tbody>
                 {fixtures.map((fixture) => (
                   <tr key={fixture.id} className="border-b last:border-0">
-                    <td className="py-2 pr-4 whitespace-nowrap tabular-nums text-muted-foreground">
+                    <td className="py-2 pr-4 whitespace-nowrap text-muted-foreground">
                       {fixture.kickoffAt
                         ? formatKickoff(fixture.kickoffAt, league.timezone, { withZone: false })
                         : 'TBC'}
@@ -92,7 +92,7 @@ export default async function AdminFixturesPage() {
                     <td className="py-2 pr-4 text-muted-foreground">{fixture.competitionName}</td>
                     <td className="py-2 pr-4">
                       {fixture.result.state === 'CONFIRMED' && fixture.result.scoreline ? (
-                        <span className="tabular-nums font-medium">
+                        <span className="font-medium">
                           {fixture.result.scoreline.homeScore ?? '–'}–
                           {fixture.result.scoreline.awayScore ?? '–'}
                         </span>

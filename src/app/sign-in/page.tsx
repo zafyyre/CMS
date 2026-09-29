@@ -35,7 +35,7 @@ export default async function SignInPage({ searchParams }: PageProps) {
   return (
     <main
       id="main"
-      className="mx-auto flex w-full max-w-sm flex-col justify-center px-6 py-16"
+      className="mx-auto flex w-full max-w-sm flex-col px-6 py-16"
     >
       <Link
         href="/"

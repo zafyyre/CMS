@@ -62,7 +62,7 @@ export default async function DocumentsPage() {
                     {document.title}
                   </a>
                   {document.sizeLabel ? (
-                    <span className="ml-2 text-xs tabular-nums text-muted-foreground">
+                    <span className="ml-2 text-xs text-muted-foreground">
                       {document.sizeLabel}
                     </span>
                   ) : null}

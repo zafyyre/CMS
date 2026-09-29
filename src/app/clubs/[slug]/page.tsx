@@ -81,8 +81,8 @@ export default async function ClubPage({ params }: PageProps) {
       <header className="mt-1 border-b pb-6">
         <h1 className="text-3xl font-semibold tracking-tight">{club.name}</h1>
         <div className="mt-2 flex flex-wrap gap-3 text-sm text-muted-foreground">
-          {club.foundedYear ? <span className="tabular-nums">Founded {club.foundedYear}</span> : null}
-          <span className="tabular-nums">
+          {club.foundedYear ? <span>Founded {club.foundedYear}</span> : null}
+          <span>
             {club.teams.length} {club.teams.length === 1 ? 'side' : 'sides'}
           </span>
         </div>

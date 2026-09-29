@@ -147,7 +147,7 @@ export default async function StandingsPage({ searchParams }: PageProps) {
                 {table.requiresManualResolution ? (
                   <StatusPill tone="caution">Order provisional</StatusPill>
                 ) : null}
-                <span className="tabular-nums">
+                <span>
                   {table.fixturesCounted} played · {table.fixturesOutstanding} to come
                 </span>
               </div>

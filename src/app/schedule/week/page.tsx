@@ -67,7 +67,7 @@ export default async function ScheduleWeekPage({ searchParams }: PageProps) {
         <h1 className="text-3xl font-semibold tracking-tight">
           Week of {longDate(monday)}
         </h1>
-        <p className="mt-2 text-sm tabular-nums text-muted-foreground">
+        <p className="mt-2 text-sm text-muted-foreground">
           {fixtures.length} {fixtures.length === 1 ? 'match' : 'matches'}
         </p>
       </header>
@@ -98,7 +98,7 @@ export default async function ScheduleWeekPage({ searchParams }: PageProps) {
                   key={fixture.id}
                   className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-3 text-sm"
                 >
-                  <span className="tabular-nums text-muted-foreground">
+                  <span className="text-muted-foreground">
                     {fixture.kickoffAt
                       ? formatKickoffTime(fixture.kickoffAt, league.timezone)
                       : '—'}
@@ -112,7 +112,7 @@ export default async function ScheduleWeekPage({ searchParams }: PageProps) {
                   ) : null}
                   <span className="ml-auto">
                     {fixture.result.state === 'CONFIRMED' && fixture.result.scoreline ? (
-                      <span className="font-medium tabular-nums">
+                      <span className="font-medium">
                         {fixture.result.scoreline.homeScore ?? '–'}–
                         {fixture.result.scoreline.awayScore ?? '–'}
                       </span>

@@ -1,15 +1,18 @@
 /**
- * Per-league theming.
+ * Per-league theming — the inputs a league controls.
  *
  * This is a multi-tenant product: each league gets its own website and will
- * want its own colours. Rather than forking components per tenant, a league
- * seeds only the two variables its accent is derived from, and the whole
- * semantic layer in globals.css recomputes around them.
+ * want its own colours. A league seeds two variables from
+ * `organizations.theme`, and the root layout applies them to `<html>`.
  *
- * Crucially, only HUE and CHROMA are tenant-controlled — never LIGHTNESS. The
- * semantic tokens fix lightness at values chosen to hold their contrast ratios,
- * so a league cannot pick a brand colour that quietly breaks the accessibility
- * guarantee for its own members. Chroma is clamped for the same reason.
+ * What they reach TODAY is only `--ring`, the keyboard focus outline. Every
+ * other colour in globals.css is a fixed value taken from the reference
+ * design, so a league that sets nothing renders exactly like it. Letting a
+ * league restyle its brand colours themselves is a later step, whose shape is
+ * not yet designed — expect this interface to change when it lands.
+ *
+ * Only HUE and CHROMA are accepted, never lightness, and chroma is clamped, so
+ * the focus ring stays visible against the page whatever a league chooses.
  */
 
 export interface LeagueTheme {

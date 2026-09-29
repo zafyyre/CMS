@@ -53,8 +53,6 @@ export default async function HomePage() {
   const cups = competitions.filter((c) => c.isCup);
 
   return (
-    // The league seeds only hue and chroma; lightness stays fixed so a league
-    // cannot pick a brand colour that breaks contrast for its own members.
     <main id="main" className="mx-auto max-w-5xl px-6 py-10">
       <header className="border-b pb-6">
         <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
@@ -169,7 +167,7 @@ export default async function HomePage() {
                   <td className="py-2 pr-4 text-muted-foreground">
                     {c.groupNames.length > 1 ? c.groupNames.join(' · ') : 'Single table'}
                   </td>
-                  <td className="py-2 pr-4 text-right tabular-nums">{c.teamCount}</td>
+                  <td className="py-2 pr-4 text-right">{c.teamCount}</td>
                 </tr>
               ))}
             </tbody>
@@ -188,7 +186,7 @@ export default async function HomePage() {
                 >
                   {c.name}
                 </Link>
-                <span className="ml-2 text-muted-foreground tabular-nums">
+                <span className="ml-2 text-muted-foreground">
                   {c.teamCount} {c.teamCount === 1 ? 'entry' : 'entries'}
                 </span>
               </li>
@@ -207,7 +205,7 @@ export default async function HomePage() {
               <div className="flex items-baseline justify-between gap-2">
                 <h3 className="font-medium">{h.name}</h3>
                 {h.establishedYear ? (
-                  <span className="text-xs text-muted-foreground tabular-nums">
+                  <span className="text-xs text-muted-foreground">
                     since {h.establishedYear}
                   </span>
                 ) : null}
@@ -219,7 +217,7 @@ export default async function HomePage() {
                   {h.winners.slice(0, 4).map((w, i) => (
                     <li key={`${h.id}-${i}`} className="flex justify-between gap-3">
                       <span>{w.recipient}</span>
-                      <span className="text-muted-foreground tabular-nums">
+                      <span className="text-muted-foreground">
                         {w.value !== null ? `${w.value} · ` : ''}
                         {w.awardedOn?.slice(0, 4) ?? ''}
                       </span>
@@ -241,7 +239,7 @@ export default async function HomePage() {
               <Link href={`/clubs/${club.slug}`} className="font-medium hover:underline">
                 {club.name}
               </Link>
-              <span className="ml-2 text-muted-foreground tabular-nums">
+              <span className="ml-2 text-muted-foreground">
                 {club.teamCount} {club.teamCount === 1 ? 'side' : 'sides'}
               </span>
             </li>
@@ -255,9 +253,7 @@ export default async function HomePage() {
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-lg border p-4">
-      {/* Tabular numerals: proportional digits in a data table look amateurish
-          and are measurably harder to scan down a column. */}
-      <div className="text-2xl font-semibold tabular-nums">{value}</div>
+      <div className="text-2xl font-semibold">{value}</div>
       <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
     </div>
   );

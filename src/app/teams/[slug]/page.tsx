@@ -158,7 +158,7 @@ export default async function TeamPage({ params }: PageProps) {
 function Stat({ label, value }: { label: string; value: number | string }) {
   return (
     <div>
-      <div className="text-2xl font-semibold tabular-nums">{value}</div>
+      <div className="text-2xl font-semibold">{value}</div>
       <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
     </div>
   );
@@ -197,11 +197,11 @@ function FixtureList({
                   {atHome ? 'Home' : 'Away'}
                 </span>
                 <span className="font-medium">{opponent ?? 'To be confirmed'}</span>
-                <span className="ml-auto text-sm tabular-nums text-muted-foreground">
+                <span className="ml-auto text-sm text-muted-foreground">
                   {fixture.kickoffAt ? formatKickoff(fixture.kickoffAt, timezone) : 'Date to be confirmed'}
                 </span>
                 {scoreline && fixture.result.state === 'CONFIRMED' ? (
-                  <span className="w-full text-sm font-medium tabular-nums sm:w-auto">
+                  <span className="w-full text-sm font-medium sm:w-auto">
                     {atHome
                       ? `${scoreline.homeScore ?? '–'}–${scoreline.awayScore ?? '–'}`
                       : `${scoreline.awayScore ?? '–'}–${scoreline.homeScore ?? '–'}`}

@@ -59,7 +59,7 @@ export default async function ArticlePage({ params }: PageProps) {
           <h1 className="text-3xl font-semibold tracking-tight">{article.title}</h1>
           <div className="mt-2 flex flex-wrap gap-3 text-sm text-muted-foreground">
             {article.publishedAt ? (
-              <time dateTime={article.publishedAt.toISOString()} className="tabular-nums">
+              <time dateTime={article.publishedAt.toISOString()}>
                 {formatKickoff(article.publishedAt, league.timezone, { withZone: false })}
               </time>
             ) : null}

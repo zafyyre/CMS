@@ -72,7 +72,7 @@ export function TwoFactorForm({ next }: { next: string }) {
           required
           value={code}
           onChange={(e) => setCode(e.target.value.trim())}
-          className="mt-1 w-full rounded-lg border px-3 py-2 font-mono text-sm tabular-nums"
+          className="mt-1 w-full rounded-lg border px-3 py-2 font-mono text-sm"
         />
       </div>
 

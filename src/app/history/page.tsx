@@ -90,7 +90,7 @@ function HonourSection({
             <div className="flex items-baseline justify-between gap-2">
               <h3 className="font-medium">{honour.name}</h3>
               {honour.establishedYear ? (
-                <span className="text-xs tabular-nums text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   since {honour.establishedYear}
                 </span>
               ) : null}
@@ -103,7 +103,7 @@ function HonourSection({
                 {honour.winners.map((winner, index) => (
                   <li key={`${honour.id}-${index}`} className="flex justify-between gap-3">
                     <span>{winner.recipient}</span>
-                    <span className="tabular-nums text-muted-foreground">
+                    <span className="text-muted-foreground">
                       {winner.value !== null ? `${winner.value} · ` : ''}
                       {winner.awardedOn?.slice(0, 4) ?? ''}
                     </span>

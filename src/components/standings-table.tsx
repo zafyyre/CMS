@@ -8,8 +8,10 @@ import type { StandingsView } from '@/server/services/standings';
  *
  * The decisions that follow from that:
  *
- * - **Tabular numerals on every figure.** Proportional digits do not line up
- *   in a column, and scanning a column is the only thing anyone does here.
+ * - **Proportional numerals, deliberately.** Tabular figures would line up
+ *   better down a column, but the reference design this product matches uses
+ *   none, and the owner's decision is to match it exactly.
+ *   Reversible with one rule in globals.css.
  * - **A real `<caption>` and scope attributes**, so a screen reader announces
  *   "Rutland Rovers, points 34" rather than reading forty numbers in a row.
  * - **The reasoning is on the row.** `basis` is rendered as the row's
@@ -69,7 +71,7 @@ export function StandingsTable({ table }: { table: StandingsView }) {
         <tbody>
           {table.rows.map((row) => (
             <tr key={row.entryId} className="border-b last:border-0">
-              <td className="py-2 pr-2 tabular-nums text-muted-foreground">{row.position}</td>
+              <td className="py-2 pr-2 text-muted-foreground">{row.position}</td>
               <th scope="row" className="py-2 pr-4 text-left font-medium">
                 <Link href={`/teams/${row.teamSlug}`} className="hover:underline">
                   {row.teamName}
@@ -85,22 +87,22 @@ export function StandingsTable({ table }: { table: StandingsView }) {
                   </span>
                 ) : null}
               </th>
-              <td className="py-2 pr-3 text-right tabular-nums">{row.played}</td>
-              <td className="hidden py-2 pr-3 text-right tabular-nums sm:table-cell">{row.won}</td>
-              <td className="hidden py-2 pr-3 text-right tabular-nums sm:table-cell">
+              <td className="py-2 pr-3 text-right">{row.played}</td>
+              <td className="hidden py-2 pr-3 text-right sm:table-cell">{row.won}</td>
+              <td className="hidden py-2 pr-3 text-right sm:table-cell">
                 {row.drawn}
               </td>
-              <td className="hidden py-2 pr-3 text-right tabular-nums sm:table-cell">{row.lost}</td>
-              <td className="hidden py-2 pr-3 text-right tabular-nums md:table-cell">
+              <td className="hidden py-2 pr-3 text-right sm:table-cell">{row.lost}</td>
+              <td className="hidden py-2 pr-3 text-right md:table-cell">
                 {row.goalsFor}
               </td>
-              <td className="hidden py-2 pr-3 text-right tabular-nums md:table-cell">
+              <td className="hidden py-2 pr-3 text-right md:table-cell">
                 {row.goalsAgainst}
               </td>
-              <td className="py-2 pr-3 text-right tabular-nums">
+              <td className="py-2 pr-3 text-right">
                 {row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}
               </td>
-              <td className="py-2 pr-3 text-right font-semibold tabular-nums">
+              <td className="py-2 pr-3 text-right font-semibold">
                 {row.points}
                 {row.pointsAdjustment !== 0 ? (
                   // Shown, not hidden: "31" with no explanation is what

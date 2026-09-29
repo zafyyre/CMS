@@ -90,7 +90,7 @@ export default async function NewsPage({ searchParams }: PageProps) {
                 {article.publishedAt ? (
                   <time
                     dateTime={article.publishedAt.toISOString()}
-                    className="text-xs tabular-nums text-muted-foreground"
+                    className="text-xs text-muted-foreground"
                   >
                     {formatKickoff(article.publishedAt, league.timezone, { withZone: false })}
                   </time>

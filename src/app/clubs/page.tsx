@@ -33,7 +33,7 @@ export default async function ClubsPage() {
 
       <header className="mt-1 border-b pb-6">
         <h1 className="text-3xl font-semibold tracking-tight">Clubs</h1>
-        <p className="mt-2 text-sm tabular-nums text-muted-foreground">
+        <p className="mt-2 text-sm text-muted-foreground">
           {clubs.length} clubs, {clubs.reduce((sum, c) => sum + c.teamCount, 0)} sides
         </p>
       </header>
@@ -44,7 +44,7 @@ export default async function ClubsPage() {
             <Link href={`/clubs/${club.slug}`} className="font-medium hover:underline">
               {club.name}
             </Link>
-            <p className="mt-0.5 text-sm tabular-nums text-muted-foreground">
+            <p className="mt-0.5 text-sm text-muted-foreground">
               {club.teamCount} {club.teamCount === 1 ? 'side' : 'sides'}
               {club.foundedYear ? ` · founded ${club.foundedYear}` : ''}
             </p>

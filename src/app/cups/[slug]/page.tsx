@@ -141,7 +141,7 @@ export default async function CupPage({ params, searchParams }: PageProps) {
                       ) : null}
                       <span className="ml-auto">
                         {fixture.result.state === 'CONFIRMED' && fixture.result.scoreline ? (
-                          <span className="font-medium tabular-nums">
+                          <span className="font-medium">
                             {fixture.result.scoreline.homeScore ?? '–'}–
                             {fixture.result.scoreline.awayScore ?? '–'}
                             {fixture.result.scoreline.homePenalties !== null &&

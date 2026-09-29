@@ -29,7 +29,7 @@ export default async function TwoFactorPage({ searchParams }: PageProps) {
   return (
     <main
       id="main"
-      className="mx-auto flex w-full max-w-sm flex-col justify-center px-6 py-16"
+      className="mx-auto flex w-full max-w-sm flex-col px-6 py-16"
     >
       <h1 className="text-2xl font-semibold tracking-tight">Two-factor authentication</h1>
       <p className="mt-2 text-sm text-muted-foreground">

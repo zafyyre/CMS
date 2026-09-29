@@ -15,7 +15,7 @@ export const metadata = {
 
 export default function OfflinePage() {
   return (
-    <main id="main" className="mx-auto flex max-w-lg flex-col justify-center px-6 py-20">
+    <main id="main" className="mx-auto flex max-w-lg flex-col px-6 py-20">
       <h1 className="text-2xl font-semibold tracking-tight">You are offline</h1>
       <p className="mt-3 text-sm text-muted-foreground">
         This page has not been saved to your phone. Anything you have opened before is still
