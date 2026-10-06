@@ -25,11 +25,23 @@ services:
       # Runs once, on first initialisation of an empty data volume.
       # `docker compose down -v` wipes the volume so these re-run.
       - ./db/init:/docker-entrypoint-initdb.d:ro
+    # Over TCP (`-h 127.0.0.1`), not the default Unix socket. On a fresh volume
+    # the image first runs a temporary SOCKET-ONLY server to execute db/init,
+    # then shuts it down and starts the real one. Probing the socket reported
+    # "ready" during that temporary server — measured at 0.87s, before db/init
+    # had even created app_user — while TCP, which is what the app and CI
+    # actually use, only came up at 1.72s. Probing TCP can only succeed once the
+    # real server is listening, and therefore once db/init has finished.
+    #
+    # start_period + start_interval: probe every second while starting, and
+    # don't count early failures against `retries`.
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres -d cms']
+      test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U postgres -d cms']
       interval: 5s
       timeout: 5s
       retries: 10
+      start_period: 30s
+      start_interval: 1s
 
   redis:
     image: redis:7
