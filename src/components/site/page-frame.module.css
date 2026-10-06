@@ -1,0 +1,36 @@
+/*
+ * The page body's frame — the reference design's `main` spacing, and the same
+ * page width and gutter as the header and footer, so every page's content
+ * lines up with them.
+ */
+
+.main {
+  flex: 1;
+  padding: 28px 0 56px;
+}
+
+.frame {
+  width: 100%;
+  max-width: var(--page-width);
+  margin: 0 auto;
+  padding: 0 var(--page-gutter);
+}
+
+/*
+ * Reading widths for pages that are a form or prose. NOT values from the
+ * reference design, which has no such pages yet: they are the widths these
+ * pages already had, held over so moving them into the frame changed nothing
+ * but their gutters. Left-aligned within the frame, not centred. Revisit each
+ * when its page is restyled.
+ */
+.form {
+  max-width: 24rem;
+}
+
+.narrow {
+  max-width: 32rem;
+}
+
+.prose {
+  max-width: 42rem;
+}

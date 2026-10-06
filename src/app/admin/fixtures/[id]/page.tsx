@@ -96,7 +96,10 @@ export default async function AdminFixturePage({ params }: PageProps) {
 
   return (
     <>
-      <nav className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+      <nav
+        aria-label="Breadcrumb"
+        className="text-xs font-medium uppercase tracking-widest text-muted-foreground"
+      >
         <Link href="/admin/fixtures" className="hover:underline">
           Fixtures
         </Link>

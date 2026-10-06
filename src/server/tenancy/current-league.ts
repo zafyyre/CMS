@@ -22,8 +22,10 @@ export interface CurrentLeague {
   name: string;
   shortName: string | null;
   timezone: string;
-  /** Seeds the accent hue/chroma. See src/components/league-theme.tsx. */
+  /** Brand colours and focus-ring tint. See src/components/league-theme.tsx. */
   theme: unknown;
+  /** League-wide settings; the site header reads `tagline` from it. */
+  settings: unknown;
 }
 
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0', '[::1]', '::1', '']);
@@ -53,6 +55,7 @@ const SELECTION = {
   shortName: organizations.shortName,
   timezone: organizations.timezone,
   theme: organizations.theme,
+  settings: organizations.settings,
 };
 
 function toLeague(row: {
@@ -62,6 +65,7 @@ function toLeague(row: {
   shortName: string | null;
   timezone: string;
   theme: unknown;
+  settings: unknown;
 }): CurrentLeague {
   return { ...row, id: unsafeAsOrgId(row.id, 'organizations.id') };
 }

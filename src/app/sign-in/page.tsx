@@ -1,9 +1,8 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { SignInForm } from '@/components/auth/sign-in-form';
+import { PageFrame } from '@/components/site/page-frame';
 import { safeNext } from '@/lib/safe-next';
 import { getPrincipal } from '@/server/auth/principal';
-import { getCurrentLeague } from '@/server/tenancy/current-league';
 
 /**
  * Sign in.
@@ -25,7 +24,6 @@ interface PageProps {
 }
 
 export default async function SignInPage({ searchParams }: PageProps) {
-  const league = await getCurrentLeague();
   const { next } = await searchParams;
 
   // Already signed in: nothing to do here.
@@ -33,22 +31,13 @@ export default async function SignInPage({ searchParams }: PageProps) {
   if (principal) redirect(safeNext(next));
 
   return (
-    <main
-      id="main"
-      className="mx-auto flex w-full max-w-sm flex-col px-6 py-16"
-    >
-      <Link
-        href="/"
-        className="text-xs font-medium uppercase tracking-widest text-muted-foreground hover:underline"
-      >
-        {league?.shortName ?? league?.slug ?? 'League'}
-      </Link>
-      <h1 className="mt-1 text-2xl font-semibold tracking-tight">Sign in</h1>
+    <PageFrame measure="form">
+      <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
       <p className="mt-2 text-sm text-muted-foreground">
         For club officials, referees and league staff. The public pages need no account.
       </p>
 
       <SignInForm next={safeNext(next)} />
-    </main>
+    </PageFrame>
   );
 }

@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { PageFrame } from '@/components/site/page-frame';
 import { StatusPill } from '@/components/status-pill';
 import { formatKickoff } from '@/lib/time';
 import { listVenues, type VenueSummary } from '@/server/services/venues';
@@ -32,9 +32,9 @@ export default async function FieldsPage() {
   const league = await getCurrentLeague();
   if (!league) {
     return (
-      <main id="main" className="mx-auto max-w-2xl p-8">
+      <PageFrame measure="prose">
         <h1 className="text-2xl font-semibold">No league configured</h1>
-      </main>
+      </PageFrame>
     );
   }
 
@@ -43,15 +43,9 @@ export default async function FieldsPage() {
   const byMunicipality = groupByMunicipality(venues);
 
   return (
-    <main id="main" className="mx-auto max-w-5xl px-6 py-10">
+    <PageFrame>
       <header className="border-b pb-6">
-        <Link
-          href="/"
-          className="text-xs font-medium uppercase tracking-widest text-muted-foreground hover:underline"
-        >
-          {league.shortName ?? league.slug}
-        </Link>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight">Fields</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Fields</h1>
         <div className="mt-3">
           {closed.length === 0 ? (
             <StatusPill tone="positive">All grounds open</StatusPill>
@@ -138,7 +132,7 @@ export default async function FieldsPage() {
           </section>
         ))
       )}
-    </main>
+    </PageFrame>
   );
 }
 

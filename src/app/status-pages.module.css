@@ -1,0 +1,88 @@
+/*
+ * The not-found and error screens — values taken exactly from the reference
+ * design.
+ */
+
+/* Not found. The card sets its own padding here, so it is not also given the
+   card's `padded` option: two single-class rules from different stylesheets
+   would each win or lose on load order alone. */
+.notFound {
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.mark {
+  font-size: 52px;
+}
+
+.notFoundTitle {
+  font-size: 26px;
+  margin-top: 10px;
+}
+
+.notFoundText {
+  color: var(--muted-foreground);
+  max-width: 40ch;
+  margin: 8px auto 20px;
+}
+
+/* Error */
+.errorFrame {
+  /* A narrower column centred inside the page frame, as in the reference —
+     its vertical padding replaces the frame's gutters rather than adding to
+     them horizontally. */
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 48px 0;
+}
+
+.errorCard {
+  padding: 28px;
+}
+
+.errorTitle {
+  /* The size a bare second-level heading has in the reference, where this
+     screen's heading is one. Here it is the page's <h1>, so it is set
+     explicitly rather than inherited. */
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.errorText {
+  color: var(--muted-foreground);
+  /* The top margin is the browser's default for a paragraph, which the
+     reference keeps: it resets no margins, and sets only the bottom one. */
+  margin: 1em 0 18px;
+  line-height: 1.6;
+}
+
+.errorDetail {
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  padding: 12px;
+  font-family: monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-x: auto;
+  margin: 1em 0 18px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.choices {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* When the root layout itself has failed there is no header, footer or page
+   frame, so the error screen supplies its own. */
+.standalone {
+  flex: 1;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 48px 0;
+}

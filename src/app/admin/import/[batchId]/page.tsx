@@ -45,7 +45,10 @@ export default async function ImportReviewPage({ params }: PageProps) {
 
   return (
     <>
-      <nav className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+      <nav
+        aria-label="Breadcrumb"
+        className="text-xs font-medium uppercase tracking-widest text-muted-foreground"
+      >
         <Link href="/admin/import" className="hover:underline">
           Import
         </Link>

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { PageFrame } from '@/components/site/page-frame';
 import { StatusPill } from '@/components/status-pill';
 import { serializeJsonLd } from '@/lib/json-ld';
 import { formatKickoff } from '@/lib/time';
@@ -71,7 +72,7 @@ export default async function TeamPage({ params }: PageProps) {
   };
 
   return (
-    <main id="main" className="mx-auto max-w-3xl px-6 py-10">
+    <PageFrame>
       <script
         type="application/ld+json"
         // Escaped for a script context. See src/lib/json-ld.ts — plain
@@ -79,11 +80,10 @@ export default async function TeamPage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
 
-      <nav className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-        <Link href="/" className="hover:underline">
-          {league.shortName ?? league.slug}
-        </Link>
-        <span aria-hidden="true"> / </span>
+      <nav
+        aria-label="Breadcrumb"
+        className="text-xs font-medium uppercase tracking-widest text-muted-foreground"
+      >
         <Link href={`/clubs/${team.club.slug}`} className="hover:underline">
           {team.club.name}
         </Link>
@@ -151,7 +151,7 @@ export default async function TeamPage({ params }: PageProps) {
         teamEntryId={currentEntry?.entryId}
         emptyMessage="No matches played yet."
       />
-    </main>
+    </PageFrame>
   );
 }
 

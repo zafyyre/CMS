@@ -22,9 +22,10 @@
  *   be served to whoever opened the app next on a shared phone.
  */
 
-// Incremented with the public-page cache allowlist below so activating this
-// worker removes any authenticated pages stored by older clients.
-const VERSION = 'v2';
+// Incremented whenever what may be cached narrows, so activating this worker
+// removes pages stored under the older rules: v2 added the public-page
+// allowlist below, v3 stopped storing pages rendered for a signed-in visitor.
+const VERSION = 'v3';
 const PAGE_CACHE = `pages-${VERSION}`;
 const ASSET_CACHE = `assets-${VERSION}`;
 const OFFLINE_URL = '/offline';
@@ -32,6 +33,8 @@ const OFFLINE_URL = '/offline';
 // Cache Storage keys navigations by URL, not by the caller's session cookie.
 // Only the public routes are therefore eligible for offline HTML caching. Any
 // account, admin, or future authenticated route is network-only by default.
+// Even a public page is not stored when it was rendered for a signed-in
+// visitor — see PERSONALIZED below.
 const PUBLIC_PAGE_PREFIXES = [
   '/',
   '/clubs',
@@ -46,6 +49,12 @@ const PUBLIC_PAGE_PREFIXES = [
   '/teams',
 ];
 
+// Set by the server (middleware.ts) on every response to a visitor with a
+// session. The site header on every page shows the visitor's account
+// controls, so such a page must not be stored where the next person on this
+// phone would be shown it.
+const PERSONALIZED = 'x-personalized';
+
 const isPublicPage = (pathname) =>
   PUBLIC_PAGE_PREFIXES.some(
     (prefix) => pathname === prefix || (prefix !== '/' && pathname.startsWith(`${prefix}/`)),
@@ -53,7 +62,11 @@ const isPublicPage = (pathname) =>
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(PAGE_CACHE).then((cache) => cache.addAll([OFFLINE_URL])),
+    // Fetched WITHOUT cookies, so the stored copy is the anonymous page even
+    // when the worker installs for a signed-in visitor.
+    caches
+      .open(PAGE_CACHE)
+      .then((cache) => cache.add(new Request(OFFLINE_URL, { credentials: 'omit' }))),
   );
   // Take over as soon as installed rather than waiting for every tab to close.
   self.skipWaiting();
@@ -111,7 +124,7 @@ async function networkFirst(request) {
   const cache = await caches.open(PAGE_CACHE);
   try {
     const response = await fetch(request);
-    if (response.ok) cache.put(request, response.clone());
+    if (response.ok && !response.headers.has(PERSONALIZED)) cache.put(request, response.clone());
     return response;
   } catch {
     const cached = await cache.match(request);

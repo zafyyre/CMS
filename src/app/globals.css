@@ -90,6 +90,19 @@
   --result-win: #17924c;
   --result-draw: #b5852a;
   --result-loss: #d1493f;
+
+  /* Elevation, from light to heavy, and the page's content width. Declared
+     here as real custom properties so component stylesheets can read them —
+     values bound only in `@theme inline` are substituted into utilities and
+     never exist at runtime. */
+  --elevation-1: 0 1px 2px rgba(12, 40, 28, 0.06);
+  --elevation-2: 0 6px 20px rgba(12, 40, 28, 0.08);
+  --elevation-3: 0 18px 44px rgba(12, 40, 28, 0.14);
+  --page-width: 1160px;
+  /* The side gutter of every page-width frame — header, footer and page body
+     alike — so their content edges line up. It scales with the window, so
+     nothing sits flush against the edge below the maximum width. */
+  --page-gutter: clamp(16px, 3.2vw, 28px);
 }
 
 /* --- Layer 2: semantic roles ---------------------------------------------- */
@@ -166,6 +179,14 @@
 
   /* Cards and panels. */
   --radius: 14px;
+
+  /* The design's other corner radii, each named for what it rounds. Each is
+     added with the first component that uses it; the rest (6px form pills,
+     8px crests, 20px hero) arrive with theirs. */
+  --radius-pill: 999px; /* buttons, the search box, the account pill */
+  --radius-control: 10px; /* the menu button, detail boxes */
+  --radius-tile: 12px; /* the league badge, the mobile menu's rows */
+  --radius-panel: 18px; /* the mobile menu panel's lower corners */
 }
 
 /* --- Layer 3: tenant inputs ------------------------------------------------ */
@@ -258,13 +279,11 @@
      components that use them. */
   --radius-lg: var(--radius);
 
-  /* Elevation, from light to heavy. */
-  --shadow-sm: 0 1px 2px rgba(12, 40, 28, 0.06);
-  --shadow-md: 0 6px 20px rgba(12, 40, 28, 0.08);
-  --shadow-lg: 0 18px 44px rgba(12, 40, 28, 0.14);
-
-  /* The page's content width: `max-w-page`. */
-  --container-page: 1160px;
+  /* Elevation as `shadow-sm/md/lg`, and the page width as `max-w-page`. */
+  --shadow-sm: var(--elevation-1);
+  --shadow-md: var(--elevation-2);
+  --shadow-lg: var(--elevation-3);
+  --container-page: var(--page-width);
 }
 
 @layer base {
@@ -280,6 +299,10 @@
     @apply font-sans;
     -webkit-text-size-adjust: auto;
     -webkit-tap-highlight-color: revert;
+    /* In-page jumps — the skip link, a #fragment — stop below the sticky site
+       header instead of underneath it. The header measures itself into this
+       variable; see masthead.tsx. */
+    scroll-padding-top: var(--masthead-height, 0px);
   }
 
   /* 16px at line-height 1.5. The previous 17px / 1.6 is superseded by the

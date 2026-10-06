@@ -113,6 +113,16 @@ test.describe('signed in as a league administrator', () => {
     await expect(page.getByText(/nothing to administer/i)).toHaveCount(0);
   });
 
+  test('is marked as signed in on public pages, so they are never stored offline', async ({
+    page,
+  }) => {
+    // Every page's header shows the visitor's account controls, and the
+    // service worker keys its offline copies by address alone — so a page
+    // rendered for this visitor must carry the mark that keeps it out.
+    const response = await page.goto('/standings');
+    expect(response?.headers()['x-personalized']).toBe('1');
+  });
+
   test('can read every admin screen', async ({ page }) => {
     await page.goto('/admin');
     for (const [name, heading] of [

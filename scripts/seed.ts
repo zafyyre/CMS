@@ -158,6 +158,9 @@ async function main() {
     shortName: 'KML',
     timezone: 'America/Vancouver',
     theme: { accentHue: 155 },
+    // The strapline under the league's name in the site header. Says plainly
+    // that this is generated data, since it is.
+    settings: { tagline: 'Sample data · Kelowna, BC' },
   });
 
   await db.insert(schema.orgDomains).values([

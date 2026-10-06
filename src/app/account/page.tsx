@@ -1,13 +1,11 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { EnrolTwoFactor } from '@/components/auth/enrol-two-factor';
-import { SignOutButton } from '@/components/auth/sign-out-button';
+import { PageFrame } from '@/components/site/page-frame';
 import { StatusPill } from '@/components/status-pill';
 import { auth } from '@/server/auth';
 import { getPrincipal } from '@/server/auth/principal';
 import { principalRequiresMfa } from '@/server/authz/roles';
-import { getCurrentLeague } from '@/server/tenancy/current-league';
 
 /**
  * The signed-in user's own page: who the league thinks they are, what they may
@@ -26,7 +24,6 @@ export const metadata = {
 };
 
 export default async function AccountPage() {
-  const league = await getCurrentLeague();
   const principal = await getPrincipal();
   if (!principal) redirect('/sign-in?next=/account');
 
@@ -35,22 +32,14 @@ export default async function AccountPage() {
   const enrolled = session?.user.twoFactorEnabled === true;
 
   return (
-    <main
-      id="main"
-      className="mx-auto max-w-2xl px-6 py-10"
-    >
-      <nav className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-        <Link href="/" className="hover:underline">
-          {league?.shortName ?? league?.slug}
-        </Link>
-      </nav>
-
-      <header className="mt-1 flex flex-wrap items-start justify-between gap-4 border-b pb-6">
+    <PageFrame measure="prose">
+      {/* No Sign out here: the site header carries it on every page (inside
+          the menu on a phone), and a second one beside it was a duplicate. */}
+      <header className="flex flex-wrap items-start justify-between gap-4 border-b pb-6">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{session?.user.name}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{session?.user.email}</p>
         </div>
-        <SignOutButton />
       </header>
 
       <section className="mt-8">
@@ -105,7 +94,7 @@ export default async function AccountPage() {
 
         <EnrolTwoFactor enrolled={enrolled} />
       </section>
-    </main>
+    </PageFrame>
   );
 }
 

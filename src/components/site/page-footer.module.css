@@ -1,0 +1,79 @@
+/*
+ * The page footer — values taken exactly from the reference design; the class
+ * names are this project's own.
+ */
+
+.footer {
+  background: var(--brand-900);
+  color: #bfe6cf;
+  padding: 34px 0;
+  /* Sits at the bottom of a short page: <body> is a flex column. */
+  margin-top: auto;
+  font-size: 14px;
+}
+
+.frame {
+  width: 100%;
+  max-width: var(--page-width);
+  margin: 0 auto;
+  padding: 0 var(--page-gutter);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 28px;
+}
+
+/* Styled as the reference's column headings. Rendered as <h2>: the footer is a
+   section of its own in the outline, below the page's <h1>. */
+.heading {
+  color: #fff;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0 0 12px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.about {
+  margin: 0;
+  max-width: 38ch;
+}
+
+.links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.links a {
+  color: #bfe6cf;
+}
+
+.links a:hover {
+  color: #fff;
+}
+
+.legal {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  margin-top: 26px;
+  padding-top: 18px;
+  color: #86bfa0;
+  font-size: 12.5px;
+}
+
+@media (max-width: 900px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

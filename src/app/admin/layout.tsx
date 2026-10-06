@@ -1,13 +1,12 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
-import { SignOutButton } from '@/components/auth/sign-out-button';
+import { PageFrame } from '@/components/site/page-frame';
 import { StatusPill } from '@/components/status-pill';
 import { auth } from '@/server/auth';
 import { getPrincipal } from '@/server/auth/principal';
-import { can } from '@/server/authz/can';
+import { adminSections } from '@/server/authz/admin-sections';
 import { principalRequiresMfa } from '@/server/authz/roles';
-import { getCurrentLeague } from '@/server/tenancy/current-league';
 
 /**
  * The gate in front of every admin screen.
@@ -33,38 +32,29 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const principal = await getPrincipal();
   if (!principal) redirect('/sign-in?next=/admin');
 
-  const league = await getCurrentLeague();
   const session = await auth.api.getSession({ headers: await headers() });
 
-  /**
-   * Which sections this person's ROLES cover — deliberately ignoring MFA.
-   *
-   * `enforceMfa: false` is the important part. An administrator who has not yet
-   * enrolled a second factor genuinely cannot write anything: the matrix
-   * withholds every mutation, and the services enforce that. But hiding the
-   * screens from them as well produced a page that said "every button below
-   * will refuse" above no buttons at all, and gave them nowhere to see what
-   * they were locked out of or why.
-   *
-   * So navigation asks "would this role ever be allowed here?" and the banner
-   * explains the rest. Nothing is loosened: every write still passes through
-   * `assertCan` with MFA enforced.
-   */
-  const readOnly = { enforceMfa: false };
-  const canManageFixtures = can(principal, 'update', { type: 'fixture' }, readOnly);
-  const canManageVenues = can(principal, 'update', { type: 'venue' }, readOnly);
-  const canImport = can(principal, 'create', { type: 'club' }, readOnly);
-  const canDoAnything = canManageFixtures || canManageVenues || canImport;
+  // Roles, not MFA: see adminSections for why navigation ignores enrolment.
+  const sections = adminSections(principal);
+  const canManageFixtures = sections.fixtures;
+  const canManageVenues = sections.venues;
+  const canImport = sections.imports;
+  const canDoAnything = sections.any;
 
   const mfaOutstanding = principalRequiresMfa(principal) && !session?.user.twoFactorEnabled;
 
   return (
-    <div>
-      <header className="border-b">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-6 py-3">
-          <Link href="/" className="text-xs font-medium uppercase tracking-widest text-muted-foreground hover:underline">
-            {league?.shortName ?? league?.slug}
-          </Link>
+    // Grows to fill <body>, so the site footer sits at the bottom of a short
+    // admin page. `main { flex: 1 }` cannot do it here: this <main> is not a
+    // direct child of <body>, this wrapper is.
+    <div className="flex flex-1 flex-col">
+      {/* A plain block, not a <header>: the site header above is this page's
+          banner, and a second banner landmark confuses screen readers. The
+          league link and Sign out that used to sit here now live in the site
+          header; the account link stays, because the header sends admins to
+          /admin and this is their way to /account. */}
+      <div className="border-b">
+        <div className="mx-auto flex max-w-page flex-wrap items-center gap-x-6 gap-y-2 px-(--page-gutter) py-3">
           <nav aria-label="Admin" className="flex flex-wrap gap-4 text-sm">
             <Link href="/admin" className="hover:underline">
               Overview
@@ -89,14 +79,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Link href="/account" className="text-sm hover:underline">
               {session?.user.name ?? 'Account'}
             </Link>
-            <SignOutButton />
           </div>
         </div>
-      </header>
+      </div>
 
       {mfaOutstanding ? (
         <div className="border-b border-status-caution/40 bg-status-caution-bg/40">
-          <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-3 px-6 py-3 text-sm">
+          <div className="mx-auto flex max-w-page flex-wrap items-center gap-3 px-(--page-gutter) py-3 text-sm">
             <StatusPill tone="caution">Second factor not enrolled</StatusPill>
             <span>
               Your roles cannot write anything until you enrol. Every button below will refuse.
@@ -108,7 +97,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       ) : null}
 
-      <main id="main" className="mx-auto max-w-5xl px-6 py-8">
+      <PageFrame>
         {canDoAnything ? (
           children
         ) : (
@@ -124,7 +113,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             </p>
           </div>
         )}
-      </main>
+      </PageFrame>
     </div>
   );
 }

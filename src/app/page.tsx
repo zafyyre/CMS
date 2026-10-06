@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PageFrame } from '@/components/site/page-frame';
 import { StatusPill } from '@/components/status-pill';
 import {
   countEntries,
@@ -29,14 +30,14 @@ export default async function HomePage() {
 
   if (!league) {
     return (
-      <main id="main" className="mx-auto max-w-2xl p-8">
+      <PageFrame measure="prose">
         <h1 className="text-2xl font-semibold">No league configured</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           No league matches this hostname. Run <code className="font-mono">npm run db:seed</code>,
           or set <code className="font-mono">DEFAULT_ORG_SLUG</code> in{' '}
           <code className="font-mono">.env</code>.
         </p>
-      </main>
+      </PageFrame>
     );
   }
 
@@ -53,7 +54,7 @@ export default async function HomePage() {
   const cups = competitions.filter((c) => c.isCup);
 
   return (
-    <main id="main" className="mx-auto max-w-5xl px-6 py-10">
+    <PageFrame>
       <header className="border-b pb-6">
         <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
           {league.shortName ?? league.slug}
@@ -71,32 +72,6 @@ export default async function HomePage() {
             <StatusPill tone="caution">No season configured</StatusPill>
           )}
         </div>
-        <nav aria-label="Sections" className="mt-4 flex flex-wrap gap-4 text-sm">
-          <Link href="/standings" className="underline underline-offset-4">
-            Standings
-          </Link>
-          <Link href="/schedule" className="underline underline-offset-4">
-            Schedule
-          </Link>
-          <Link href="/schedule/week" className="underline underline-offset-4">
-            This week
-          </Link>
-          <Link href="/fields" className="underline underline-offset-4">
-            Fields
-          </Link>
-          <Link href="/clubs" className="underline underline-offset-4">
-            Clubs
-          </Link>
-          <Link href="/news" className="underline underline-offset-4">
-            News
-          </Link>
-          <Link href="/documents" className="underline underline-offset-4">
-            Documents
-          </Link>
-          <Link href="/history" className="underline underline-offset-4">
-            History
-          </Link>
-        </nav>
       </header>
 
       {closures.length > 0 ? (
@@ -246,7 +221,7 @@ export default async function HomePage() {
           ))}
         </ul>
       </Section>
-    </main>
+    </PageFrame>
   );
 }
 

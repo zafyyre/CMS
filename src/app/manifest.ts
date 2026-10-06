@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { leagueBrandColor } from '@/components/league-theme';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
 
 /**
@@ -28,10 +29,11 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     scope: '/',
     display: 'standalone',
     orientation: 'portrait',
-    // Fixed rather than themed: the accent colour is tenant-controlled and the
-    // browser chrome has no contrast guarantee to fall back on.
-    background_color: '#ffffff',
-    theme_color: '#0f172a',
+    // The splash screen takes the page's ground; the toolbar takes the colour
+    // at the top of the site header, following a league's own brand colour
+    // when it sets one — the same value the root layout gives the browser.
+    background_color: '#f3f6f4',
+    theme_color: leagueBrandColor(league?.theme, 'brand-800'),
     categories: ['sports'],
     icons: [
       {
