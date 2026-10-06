@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { PageFrame } from '@/components/site/page-frame';
 import { formatKickoff } from '@/lib/time';
 import { type ArticleKind, listArticles } from '@/server/services/content';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
@@ -38,14 +39,8 @@ export default async function NewsPage({ searchParams }: PageProps) {
   const articles = await listArticles(league.id, { kind: selected });
 
   return (
-    <main id="main" className="mx-auto max-w-3xl px-6 py-10">
-      <nav className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-        <Link href="/" className="hover:underline">
-          {league.shortName ?? league.slug}
-        </Link>
-      </nav>
-
-      <header className="mt-1 border-b pb-6">
+    <PageFrame>
+      <header className="border-b pb-6">
         <h1 className="text-3xl font-semibold tracking-tight">News</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Announcements, the notice board and weekly reports.
@@ -90,7 +85,7 @@ export default async function NewsPage({ searchParams }: PageProps) {
                 {article.publishedAt ? (
                   <time
                     dateTime={article.publishedAt.toISOString()}
-                    className="text-xs tabular-nums text-muted-foreground"
+                    className="text-xs text-muted-foreground"
                   >
                     {formatKickoff(article.publishedAt, league.timezone, { withZone: false })}
                   </time>
@@ -109,7 +104,7 @@ export default async function NewsPage({ searchParams }: PageProps) {
           ))}
         </ul>
       )}
-    </main>
+    </PageFrame>
   );
 }
 

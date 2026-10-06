@@ -1,5 +1,5 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { PageFrame } from '@/components/site/page-frame';
 import { type DocumentSummary, listDocuments } from '@/server/services/content';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
 
@@ -25,14 +25,8 @@ export default async function DocumentsPage() {
   const grouped = groupByCategory(documents);
 
   return (
-    <main id="main" className="mx-auto max-w-3xl px-6 py-10">
-      <nav className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-        <Link href="/" className="hover:underline">
-          {league.shortName ?? league.slug}
-        </Link>
-      </nav>
-
-      <header className="mt-1 border-b pb-6">
+    <PageFrame>
+      <header className="border-b pb-6">
         <h1 className="text-3xl font-semibold tracking-tight">Documents</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Rules, the constitution, fine schedules and registration forms.
@@ -62,7 +56,7 @@ export default async function DocumentsPage() {
                     {document.title}
                   </a>
                   {document.sizeLabel ? (
-                    <span className="ml-2 text-xs tabular-nums text-muted-foreground">
+                    <span className="ml-2 text-xs text-muted-foreground">
                       {document.sizeLabel}
                     </span>
                   ) : null}
@@ -75,7 +69,7 @@ export default async function DocumentsPage() {
           </section>
         ))
       )}
-    </main>
+    </PageFrame>
   );
 }
 

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { PageFrame } from '@/components/site/page-frame';
 import { formatKickoff } from '@/lib/time';
 import { getArticleBySlug } from '@/server/services/content';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
@@ -43,12 +44,11 @@ export default async function ArticlePage({ params }: PageProps) {
   if (!article) notFound();
 
   return (
-    <main id="main" className="mx-auto max-w-2xl px-6 py-10">
-      <nav className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-        <Link href="/" className="hover:underline">
-          {league.shortName ?? league.slug}
-        </Link>
-        <span aria-hidden="true"> / </span>
+    <PageFrame measure="prose">
+      <nav
+        aria-label="Breadcrumb"
+        className="text-xs font-medium uppercase tracking-widest text-muted-foreground"
+      >
         <Link href="/news" className="hover:underline">
           News
         </Link>
@@ -59,7 +59,7 @@ export default async function ArticlePage({ params }: PageProps) {
           <h1 className="text-3xl font-semibold tracking-tight">{article.title}</h1>
           <div className="mt-2 flex flex-wrap gap-3 text-sm text-muted-foreground">
             {article.publishedAt ? (
-              <time dateTime={article.publishedAt.toISOString()} className="tabular-nums">
+              <time dateTime={article.publishedAt.toISOString()}>
                 {formatKickoff(article.publishedAt, league.timezone, { withZone: false })}
               </time>
             ) : null}
@@ -79,6 +79,6 @@ export default async function ArticlePage({ params }: PageProps) {
             ))}
         </div>
       </article>
-    </main>
+    </PageFrame>
   );
 }

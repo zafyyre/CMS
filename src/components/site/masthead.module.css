@@ -1,0 +1,426 @@
+/*
+ * The site header — values taken exactly from the reference design; the class
+ * names are this project's own. Kept as a CSS module rather than utilities
+ * because it is dense with fluid clamp()s, a gradient and a four-breakpoint
+ * mobile menu, and a module can be diffed against the reference value by
+ * value. Module rules are unlayered, so they win over Tailwind's layered
+ * utilities; do not mix utilities onto these elements.
+ */
+
+.masthead {
+  background: linear-gradient(180deg, var(--brand-800), var(--brand-900));
+  color: #eafff3;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.18);
+}
+
+/* The page-width frame, used by the header bar and the menu panel. Its width
+   and gutter are the shared tokens the footer and page body also use, so all
+   of their content edges line up. */
+.frame {
+  width: 100%;
+  max-width: var(--page-width);
+  margin: 0 auto;
+  padding: 0 var(--page-gutter);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  /* padding-block, not a `14px 0` shorthand, which would zero the gutter
+     `.frame` provides. */
+  padding-block: 14px;
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.monogram {
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-tile);
+  background: var(--highlight);
+  color: var(--highlight-foreground);
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 20px;
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.08);
+  flex: none;
+}
+
+.names {
+  min-width: 0;
+}
+
+/* Not a heading: every page has its own <h1>, and a second one on every page
+   would muddle the document outline for screen readers. Styled to match a
+   heading exactly — including the weight a heading would inherit. */
+.leagueName {
+  display: block;
+  margin: 0;
+  font-weight: 700;
+  /* Scales down before it can crowd the search and account controls. */
+  font-size: clamp(15px, 1.9vw, 20px);
+  color: #fff;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.tagline {
+  font-size: 11.5px;
+  color: #9fe6bf;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  padding: 8px 12px;
+  border-radius: var(--radius-pill);
+  color: #dff6e8;
+}
+
+.searchInput {
+  background: none;
+  border: none;
+  outline: none;
+  color: #fff;
+  width: 150px;
+  font-size: 13.5px;
+  /* The browser's own form-control face and padding, NOT the page font and
+     Tailwind's zero padding. The reference sets neither here, so its search
+     box keeps the browser's defaults (Arial on Windows, 1px 2px padding);
+     Tailwind's reset overrides both, and `revert` undoes that for this one. */
+  font-family: revert;
+  padding: revert;
+}
+
+.searchInput::placeholder {
+  color: #a9d8bf;
+}
+
+/* A keyboard focus ring, which the reference does not have: it removes the
+   input's outline and puts nothing in its place, so the header's one text
+   field gave no sign of having focus. This is the site's standard ring, drawn
+   round the whole pill because the bare input has no room for it. Nothing
+   changes until the field has focus. */
+.search:has(.searchInput:focus-visible) {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.accountPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--highlight);
+  color: var(--highlight-foreground);
+  padding: 9px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: filter 0.15s;
+}
+
+.accountPill:hover {
+  filter: brightness(1.05);
+  color: var(--highlight-foreground);
+}
+
+.accountArea {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Sign out is the design's small white button, unchanged — except that on
+   hover its background turns translucent, letting the header show through.
+   The border and text colour on hover still come from the shared button's
+   own hover. Three classes and a pseudo-class outrank `.button:hover`
+   whichever of the two stylesheets loads first. */
+.accountArea .signOut:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* The menu's own account links: shown only on phones, once the header's
+   buttons are hidden. */
+.menuAccount {
+  display: none;
+}
+
+.menuButton {
+  display: none;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-radius: var(--radius-control);
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.sections {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* One scrollable row rather than wrapping: a wrapped second row would change
+   the header's height at every width between the menu breakpoint and the
+   maximum, and the page would jump. */
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overscroll-behavior-x: contain;
+}
+
+.list::-webkit-scrollbar {
+  display: none;
+}
+
+.link {
+  display: block;
+  white-space: nowrap;
+  /* Fluid, not stepped, so dragging the window never makes the row jump: the
+     tight end lands at 1024px and the roomy end at the maximum width. */
+  padding: 12px clamp(9px, 2.222vw - 13.78px, 12px);
+  font-size: clamp(12.5px, 0.37vw + 8.7px, 13px);
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+  color: #cfeeda;
+  border-bottom: 3px solid transparent;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+/* Two classes and after the hover rule, so the current page's tab keeps its
+   own look under the pointer instead of taking the hover's. */
+.link.current {
+  color: #fff;
+  border-bottom-color: var(--highlight);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.scrim {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .menuButton {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    font-size: 20px;
+  }
+
+  /* The open menu is a panel laid over the page, just below the header, and
+     shorter than the screen so the page keeps showing behind it. Hidden with
+     opacity and visibility so it can animate; visibility switches last on
+     close, which takes the links out of the tab order once they are gone. */
+  .sections {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--brand-900);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0 0 var(--radius-panel) var(--radius-panel);
+    box-shadow: 0 24px 48px -16px rgba(0, 0, 0, 0.5);
+    max-height: min(75vh, calc(100vh - var(--masthead-height, 76px)));
+    max-height: min(75dvh, calc(100dvh - var(--masthead-height, 76px)));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px);
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease,
+      visibility 0s linear 0.2s;
+  }
+
+  .sections.expanded {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease,
+      visibility 0s;
+  }
+
+  .sections .frame {
+    padding-block: 10px 16px;
+  }
+
+  /* Phones get two columns (the 720px block below); a merely narrow window
+     fits more, so the panel never stretches into long rows. */
+  .list {
+    display: grid;
+    gap: 4px;
+    overflow: visible;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr));
+  }
+
+  .link {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 0 14px;
+    border-radius: var(--radius-tile);
+    border-bottom: 0;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    white-space: normal;
+    color: #d6f1e0;
+  }
+
+  .link:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: #fff;
+  }
+
+  .link.current {
+    color: #fff;
+    /* A 12% tint of the highlight colour — the reference's value exactly with
+       the default palette, and a league's own highlight when it sets one. The
+       literal first, for browsers without color-mix(). */
+    background: rgba(200, 242, 68, 0.12);
+    background: color-mix(in srgb, var(--highlight) 12%, transparent);
+    box-shadow: inset 3px 0 0 var(--highlight);
+  }
+
+  /* Account links sit apart from the page links, as full-width buttons. */
+  .menuAccount {
+    grid-column: 1 / -1;
+  }
+
+  .item:not(.menuAccount) + .menuAccount {
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .menuAccount .link {
+    justify-content: center;
+    font-weight: 700;
+  }
+
+  .item:not(.menuAccount) + .menuAccount .link {
+    background: var(--highlight);
+    color: var(--highlight-foreground);
+    box-shadow: none;
+  }
+
+  .menuAccount + .menuAccount .link {
+    border: 1px solid rgba(255, 255, 255, 0.18);
+  }
+
+  /* The sign-out control in the menu is a real <button> in a form, not a
+     link — see SignOutButton — so it needs to fill its cell like one. */
+  .menuAccount button.link {
+    width: 100%;
+    cursor: pointer;
+    /* A button's own line-height and centring, undone so it sets its text
+       exactly as the link beside it does. */
+    line-height: inherit;
+    text-align: inherit;
+  }
+
+  /* Dims the page behind the open menu, beneath the header so the header and
+     menu stay usable, and takes the tap that closes it so that tap cannot
+     also press whatever is underneath. */
+  .scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: rgba(2, 16, 10, 0.5);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.2s ease,
+      visibility 0s linear 0.2s;
+  }
+
+  .scrim.expanded {
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity 0.2s ease,
+      visibility 0s;
+  }
+
+  /* The page behind must not scroll while the menu covers it. */
+  :global(html[data-menu-open]) {
+    overflow: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sections,
+  .sections.expanded,
+  .scrim,
+  .scrim.expanded {
+    transition: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .searchInput {
+    width: 110px;
+  }
+}
+
+@media (max-width: 720px) {
+  .search,
+  .accountPill,
+  .accountArea {
+    display: none;
+  }
+
+  .menuAccount {
+    display: block;
+  }
+
+  .list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

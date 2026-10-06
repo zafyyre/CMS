@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PageFrame } from '@/components/site/page-frame';
 import { StatusPill } from '@/components/status-pill';
 import {
   countEntries,
@@ -29,14 +30,14 @@ export default async function HomePage() {
 
   if (!league) {
     return (
-      <main id="main" className="mx-auto max-w-2xl p-8">
+      <PageFrame measure="prose">
         <h1 className="text-2xl font-semibold">No league configured</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           No league matches this hostname. Run <code className="font-mono">npm run db:seed</code>,
           or set <code className="font-mono">DEFAULT_ORG_SLUG</code> in{' '}
           <code className="font-mono">.env</code>.
         </p>
-      </main>
+      </PageFrame>
     );
   }
 
@@ -53,9 +54,7 @@ export default async function HomePage() {
   const cups = competitions.filter((c) => c.isCup);
 
   return (
-    // The league seeds only hue and chroma; lightness stays fixed so a league
-    // cannot pick a brand colour that breaks contrast for its own members.
-    <main id="main" className="mx-auto max-w-5xl px-6 py-10">
+    <PageFrame>
       <header className="border-b pb-6">
         <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
           {league.shortName ?? league.slug}
@@ -73,32 +72,6 @@ export default async function HomePage() {
             <StatusPill tone="caution">No season configured</StatusPill>
           )}
         </div>
-        <nav aria-label="Sections" className="mt-4 flex flex-wrap gap-4 text-sm">
-          <Link href="/standings" className="underline underline-offset-4">
-            Standings
-          </Link>
-          <Link href="/schedule" className="underline underline-offset-4">
-            Schedule
-          </Link>
-          <Link href="/schedule/week" className="underline underline-offset-4">
-            This week
-          </Link>
-          <Link href="/fields" className="underline underline-offset-4">
-            Fields
-          </Link>
-          <Link href="/clubs" className="underline underline-offset-4">
-            Clubs
-          </Link>
-          <Link href="/news" className="underline underline-offset-4">
-            News
-          </Link>
-          <Link href="/documents" className="underline underline-offset-4">
-            Documents
-          </Link>
-          <Link href="/history" className="underline underline-offset-4">
-            History
-          </Link>
-        </nav>
       </header>
 
       {closures.length > 0 ? (
@@ -169,7 +142,7 @@ export default async function HomePage() {
                   <td className="py-2 pr-4 text-muted-foreground">
                     {c.groupNames.length > 1 ? c.groupNames.join(' · ') : 'Single table'}
                   </td>
-                  <td className="py-2 pr-4 text-right tabular-nums">{c.teamCount}</td>
+                  <td className="py-2 pr-4 text-right">{c.teamCount}</td>
                 </tr>
               ))}
             </tbody>
@@ -188,7 +161,7 @@ export default async function HomePage() {
                 >
                   {c.name}
                 </Link>
-                <span className="ml-2 text-muted-foreground tabular-nums">
+                <span className="ml-2 text-muted-foreground">
                   {c.teamCount} {c.teamCount === 1 ? 'entry' : 'entries'}
                 </span>
               </li>
@@ -207,7 +180,7 @@ export default async function HomePage() {
               <div className="flex items-baseline justify-between gap-2">
                 <h3 className="font-medium">{h.name}</h3>
                 {h.establishedYear ? (
-                  <span className="text-xs text-muted-foreground tabular-nums">
+                  <span className="text-xs text-muted-foreground">
                     since {h.establishedYear}
                   </span>
                 ) : null}
@@ -219,7 +192,7 @@ export default async function HomePage() {
                   {h.winners.slice(0, 4).map((w, i) => (
                     <li key={`${h.id}-${i}`} className="flex justify-between gap-3">
                       <span>{w.recipient}</span>
-                      <span className="text-muted-foreground tabular-nums">
+                      <span className="text-muted-foreground">
                         {w.value !== null ? `${w.value} · ` : ''}
                         {w.awardedOn?.slice(0, 4) ?? ''}
                       </span>
@@ -241,23 +214,21 @@ export default async function HomePage() {
               <Link href={`/clubs/${club.slug}`} className="font-medium hover:underline">
                 {club.name}
               </Link>
-              <span className="ml-2 text-muted-foreground tabular-nums">
+              <span className="ml-2 text-muted-foreground">
                 {club.teamCount} {club.teamCount === 1 ? 'side' : 'sides'}
               </span>
             </li>
           ))}
         </ul>
       </Section>
-    </main>
+    </PageFrame>
   );
 }
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-lg border p-4">
-      {/* Tabular numerals: proportional digits in a data table look amateurish
-          and are measurably harder to scan down a column. */}
-      <div className="text-2xl font-semibold tabular-nums">{value}</div>
+      <div className="text-2xl font-semibold">{value}</div>
       <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
     </div>
   );

@@ -15,7 +15,12 @@ import { signOut } from '@/lib/auth-client';
  * component, so without it the previous user's rendered output stays on screen
  * until something else forces a re-render.
  */
-export function SignOutButton() {
+export function SignOutButton({
+  className = 'rounded-lg border px-3 py-2 text-sm hover:border-foreground disabled:opacity-60',
+}: {
+  /** Lets the site header and its mobile menu style it to match. */
+  className?: string;
+} = {}) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
 
@@ -32,7 +37,7 @@ export function SignOutButton() {
       <button
         type="submit"
         disabled={pending}
-        className="rounded-lg border px-3 py-2 text-sm hover:border-foreground disabled:opacity-60"
+        className={className}
       >
         {pending ? 'Signing out…' : 'Sign out'}
       </button>

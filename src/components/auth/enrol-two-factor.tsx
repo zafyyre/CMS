@@ -191,7 +191,7 @@ export function EnrolTwoFactor({ enrolled }: { enrolled: boolean }) {
             required
             value={code}
             onChange={(e) => setCode(e.target.value.trim())}
-            className="w-full max-w-sm rounded-lg border px-3 py-2 font-mono text-sm tabular-nums"
+            className="w-full max-w-sm rounded-lg border px-3 py-2 font-mono text-sm"
           />
           <button
             type="submit"

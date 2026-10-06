@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { PageFrame } from '@/components/site/page-frame';
 import { StandingsTable } from '@/components/standings-table';
 import { StatusPill } from '@/components/status-pill';
 import { getCurrentSeason, listCompetitions } from '@/server/services/competition';
@@ -45,7 +46,7 @@ export default async function StandingsPage({ searchParams }: PageProps) {
 
   if (!season) {
     return (
-      <Shell league={league}>
+      <Shell>
         <p className="mt-10 text-sm text-muted-foreground">
           No seasons have been set up yet.
         </p>
@@ -66,7 +67,7 @@ export default async function StandingsPage({ searchParams }: PageProps) {
   const activeCompetition = competitions.find((c) => c.editionId === editionId);
 
   return (
-    <Shell league={league}>
+    <Shell>
       <nav aria-label="Season" className="mt-8">
         <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
           Season
@@ -147,7 +148,7 @@ export default async function StandingsPage({ searchParams }: PageProps) {
                 {table.requiresManualResolution ? (
                   <StatusPill tone="caution">Order provisional</StatusPill>
                 ) : null}
-                <span className="tabular-nums">
+                <span>
                   {table.fixturesCounted} played · {table.fixturesOutstanding} to come
                 </span>
               </div>
@@ -161,25 +162,13 @@ export default async function StandingsPage({ searchParams }: PageProps) {
   );
 }
 
-function Shell({
-  league,
-  children,
-}: {
-  league: NonNullable<Awaited<ReturnType<typeof getCurrentLeague>>>;
-  children: React.ReactNode;
-}) {
+function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <main id="main" className="mx-auto max-w-5xl px-6 py-10">
+    <PageFrame>
       <header className="border-b pb-6">
-        <Link
-          href="/"
-          className="text-xs font-medium uppercase tracking-widest text-muted-foreground hover:underline"
-        >
-          {league.shortName ?? league.slug}
-        </Link>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight">Standings</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Standings</h1>
       </header>
       {children}
-    </main>
+    </PageFrame>
   );
 }

@@ -131,7 +131,7 @@ export default async function AdminOverviewPage() {
           {tables.map((table) => (
             <div key={table.stageGroupId} className="rounded-lg border p-4">
               <p className="text-sm font-medium">{table.stageGroupName}</p>
-              <p className="mt-0.5 text-xs tabular-nums text-muted-foreground">
+              <p className="mt-0.5 text-xs text-muted-foreground">
                 {table.fixturesCounted} counted · {table.fixturesOutstanding} to play
               </p>
               <ActionForm action={recomputeStandingsAction} submitLabel="Recompute">
@@ -156,7 +156,7 @@ function Card({
 }) {
   return (
     <div className="rounded-lg border p-4">
-      <div className="text-3xl font-semibold tabular-nums">{value}</div>
+      <div className="text-3xl font-semibold">{value}</div>
       <div className="mt-1 text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className="mt-2">
         <StatusPill tone={value === 0 ? 'positive' : tone}>

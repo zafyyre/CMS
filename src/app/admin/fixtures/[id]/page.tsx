@@ -96,7 +96,10 @@ export default async function AdminFixturePage({ params }: PageProps) {
 
   return (
     <>
-      <nav className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+      <nav
+        aria-label="Breadcrumb"
+        className="text-xs font-medium uppercase tracking-widest text-muted-foreground"
+      >
         <Link href="/admin/fixtures" className="hover:underline">
           Fixtures
         </Link>
@@ -294,7 +297,7 @@ export default async function AdminFixturePage({ params }: PageProps) {
           <ul className="mt-6 divide-y rounded-lg border">
             {report.events.map((event) => (
               <li key={event.id} className="flex flex-wrap items-baseline gap-3 px-4 py-3 text-sm">
-                <span className="tabular-nums text-muted-foreground">
+                <span className="text-muted-foreground">
                   {event.minute !== null ? `${event.minute}'` : '—'}
                 </span>
                 <span className="font-medium">{event.type.toLowerCase().replace(/_/g, ' ')}</span>
@@ -336,7 +339,7 @@ export default async function AdminFixturePage({ params }: PageProps) {
             ) : (
               report.submissions.map((submission) => (
                 <li key={submission.id} className="px-4 py-3">
-                  <span className="font-medium tabular-nums">
+                  <span className="font-medium">
                     {submission.homeScore ?? '–'}–{submission.awayScore ?? '–'}
                   </span>
                   <span className="ml-2 text-muted-foreground">
@@ -366,7 +369,7 @@ export default async function AdminFixturePage({ params }: PageProps) {
               <li key={change.id} className="px-4 py-3">
                 <span className="font-medium">{change.kind.toLowerCase().replace(/_/g, ' ')}</span>
                 {change.previousKickoffAt && change.newKickoffAt ? (
-                  <span className="ml-2 tabular-nums text-muted-foreground">
+                  <span className="ml-2 text-muted-foreground">
                     {formatKickoff(change.previousKickoffAt, league.timezone, { withZone: false })} →{' '}
                     {formatKickoff(change.newKickoffAt, league.timezone, { withZone: false })}
                   </span>

@@ -45,7 +45,10 @@ export default async function ImportReviewPage({ params }: PageProps) {
 
   return (
     <>
-      <nav className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+      <nav
+        aria-label="Breadcrumb"
+        className="text-xs font-medium uppercase tracking-widest text-muted-foreground"
+      >
         <Link href="/admin/import" className="hover:underline">
           Import
         </Link>
@@ -54,9 +57,9 @@ export default async function ImportReviewPage({ params }: PageProps) {
       <header className="mt-1 border-b pb-6">
         <h1 className="text-2xl font-semibold tracking-tight">{batch.source}</h1>
         <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-          <span className="tabular-nums">{batch.recordsTotal} records</span>
-          <span className="tabular-nums">{batch.recordsMatched} matched</span>
-          <span className="tabular-nums">{batch.recordsNeedingReview} awaiting a decision</span>
+          <span>{batch.recordsTotal} records</span>
+          <span>{batch.recordsMatched} matched</span>
+          <span>{batch.recordsNeedingReview} awaiting a decision</span>
           {batch.dryRun ? <StatusPill tone="info">Dry run</StatusPill> : null}
           {batch.status === 'PROMOTED' ? <StatusPill tone="positive">Promoted</StatusPill> : null}
         </div>

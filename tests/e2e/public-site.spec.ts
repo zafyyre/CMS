@@ -14,8 +14,14 @@ test.describe('a visitor with no account', () => {
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 
+    // The sections live in the site header's navigation on every page. On a
+    // phone they sit behind the menu button, so open it first — that the
+    // links are reachable there is exactly what this guards.
+    const menu = page.getByRole('button', { name: 'Open menu' });
+    if (await menu.isVisible()) await menu.click();
+    const nav = page.getByRole('navigation', { name: 'Main' });
     for (const section of ['Standings', 'Schedule', 'Fields', 'Clubs', 'History']) {
-      await expect(page.getByRole('navigation', { name: 'Sections' }).getByRole('link', { name: section })).toBeVisible();
+      await expect(nav.getByRole('link', { name: section, exact: true })).toBeVisible();
     }
   });
 
@@ -109,6 +115,46 @@ test.describe('a visitor with no account', () => {
     await expect(page).toHaveURL(/\/clubs\/[a-z0-9-]+$/);
     await expect(page.getByRole('heading', { level: 1, name })).toBeVisible();
   });
+
+  test('finds a club by searching for part of its name', async ({ page }) => {
+    // A fragment of a real club's name, in the wrong case: matching is a
+    // case-insensitive substring, so it must still be found.
+    await page.goto('/clubs');
+    const name = (await page.locator('main a[href^="/clubs/"]').first().textContent())?.trim() ?? '';
+    const word = name.split(/[^A-Za-z]+/).sort((a, b) => b.length - a.length)[0] ?? '';
+    const fragment = word.slice(1, 5).toUpperCase();
+    expect(fragment).toHaveLength(4);
+    // The plain index is the page search engines should keep.
+    await expect(page.locator('meta[name="robots"][content*="noindex"]')).toHaveCount(0);
+
+    // From the header's search box where there is one; phones hide it, as
+    // the reference does, so there the address is used directly — it is the
+    // same GET form either way.
+    await page.goto('/');
+    const box = page.getByRole('textbox', { name: 'Search clubs' });
+    if (await box.isVisible()) {
+      await box.fill(fragment);
+      await box.press('Enter');
+      await expect(page).toHaveURL(new RegExp(`/clubs\\?q=${fragment}$`));
+    } else {
+      await page.goto(`/clubs?q=${fragment}`);
+    }
+
+    const results = page.locator('main a[href^="/clubs/"]');
+    await expect(results.filter({ hasText: name })).toHaveCount(1);
+    for (const result of await results.allTextContents()) {
+      expect(result.toLowerCase()).toContain(fragment.toLowerCase());
+    }
+    // A search result is not a page of its own: kept out of search engines.
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
+  });
+
+  test('echoes no more than 100 characters of a search', async ({ page }) => {
+    await page.goto(`/clubs?q=${'x'.repeat(150)}`);
+    await expect(
+      page.getByText(`No club’s name contains “${'x'.repeat(100)}”.`, { exact: true }),
+    ).toBeVisible();
+  });
 });
 
 test.describe('the things that are easy to break and never noticed', () => {
@@ -135,6 +181,59 @@ test.describe('the things that are easy to break and never noticed', () => {
     const response = await request.get('/api/healthz');
     expect(response.status()).toBe(200);
     expect((await response.json()).status).toBe('ok');
+  });
+
+  test('answers an unknown address with a real 404, inside the site', async ({ page }) => {
+    // A true 404 status, not a streamed 200: a root loading.tsx would start
+    // streaming before any page could call notFound(), and every missing club,
+    // team or article would then answer 200. Hence there is none.
+    const response = await page.goto('/no-such-page');
+    expect(response?.status()).toBe(404);
+    await expect(page.getByRole('heading', { level: 1, name: 'Page not found' })).toBeVisible();
+    await expect(page.getByRole('banner')).toBeVisible();
+    await expect(page.getByRole('contentinfo')).toBeVisible();
+
+    // The case a loading.tsx actually breaks: a page that awaits the database
+    // and only THEN finds nothing to show.
+    const missing = await page.goto('/clubs/no-such-club');
+    expect(missing?.status()).toBe(404);
+    await expect(page.getByRole('heading', { level: 1, name: 'Page not found' })).toBeVisible();
+  });
+
+  test('leaves an anonymous visitor’s pages free to be saved for offline use', async ({ page }) => {
+    // The counterpart of the signed-in check in admin-access.spec.ts: marking
+    // every page would quietly switch offline support off for everyone.
+    const response = await page.goto('/standings');
+    expect(response?.headers()['x-personalized']).toBeUndefined();
+  });
+
+  test('shows the skip link above the sticky header when it takes focus', async ({ page }) => {
+    // The header is stacked above the page, and a skip link that took focus
+    // underneath it would be invisible to exactly the people who need it.
+    await page.goto('/standings');
+    await page.keyboard.press('Tab');
+    const skip = page.getByRole('link', { name: 'Skip to content' });
+    await expect(skip).toBeFocused();
+    const topmost = await skip.evaluate((link) => {
+      const box = link.getBoundingClientRect();
+      return link.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2));
+    });
+    expect(topmost).toBe(true);
+  });
+
+  test('keeps the club and team pages’ structured data', async ({ page }) => {
+    // Lost silently if a layout change drops the <script> — nothing on screen
+    // shows it, and the serializer's unit test cannot see placement.
+    await page.goto('/clubs');
+    await page.locator('a[href^="/clubs/"]').first().click();
+    await expect(page).toHaveURL(/\/clubs\/[a-z0-9-]+$/);
+    const data = await page.locator('script[type="application/ld+json"]').first().textContent();
+    expect(JSON.parse(data ?? '{}')['@type']).toBe('SportsOrganization');
+
+    await page.locator('main a[href^="/teams/"]').first().click();
+    await expect(page).toHaveURL(/\/teams\/[a-z0-9-]+$/);
+    const team = await page.locator('script[type="application/ld+json"]').first().textContent();
+    expect(JSON.parse(team ?? '{}')['@type']).toBe('SportsTeam');
   });
 
   test('does not leak a connection string from the health check', async ({ request }) => {

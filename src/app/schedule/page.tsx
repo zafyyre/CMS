@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PageFrame } from '@/components/site/page-frame';
 import { StatusPill, type StatusTone } from '@/components/status-pill';
 import { formatKickoffTime, leagueDateKey } from '@/lib/time';
 import { getCurrentSeason } from '@/server/services/competition';
@@ -46,9 +47,9 @@ export default async function SchedulePage() {
   const league = await getCurrentLeague();
   if (!league) {
     return (
-      <main id="main" className="mx-auto max-w-2xl p-8">
+      <PageFrame measure="prose">
         <h1 className="text-2xl font-semibold">No league configured</h1>
-      </main>
+      </PageFrame>
     );
   }
 
@@ -61,12 +62,9 @@ export default async function SchedulePage() {
   const days = groupByLeagueDay(fixtures, league.timezone);
 
   return (
-    <main id="main" className="mx-auto max-w-5xl px-6 py-10">
+    <PageFrame>
       <header className="border-b pb-6">
-        <Link href="/" className="text-xs font-medium uppercase tracking-widest text-muted-foreground hover:underline">
-          {league.shortName ?? league.slug}
-        </Link>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight">Schedule</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Schedule</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {season ? season.name : 'No season configured'} · all times{' '}
           {/* Naming the zone matters most on the two weekends it changes. */}
@@ -122,7 +120,7 @@ export default async function SchedulePage() {
                 <tbody>
                   {dayFixtures.map((fixture) => (
                     <tr key={fixture.id} className="border-b last:border-0 align-top">
-                      <td className="py-2 pr-4 tabular-nums whitespace-nowrap">
+                      <td className="py-2 pr-4 whitespace-nowrap">
                         {fixture.kickoffAt
                           ? formatKickoffTime(fixture.kickoffAt, league.timezone)
                           : '—'}
@@ -157,7 +155,7 @@ export default async function SchedulePage() {
           </section>
         ))
       )}
-    </main>
+    </PageFrame>
   );
 }
 
@@ -167,7 +165,7 @@ function ResultCell({ fixture }: { fixture: FixtureView }) {
   if (result.state === 'CONFIRMED' && result.scoreline) {
     const { homeScore, awayScore, homePenalties, awayPenalties } = result.scoreline;
     return (
-      <span className="tabular-nums font-medium" title={result.basis}>
+      <span className="font-medium" title={result.basis}>
         {homeScore ?? '–'}–{awayScore ?? '–'}
         {homePenalties !== null && awayPenalties !== null ? (
           <span className="ml-1 text-xs font-normal text-muted-foreground">

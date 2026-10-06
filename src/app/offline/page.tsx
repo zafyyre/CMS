@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PageFrame } from '@/components/site/page-frame';
 
 /**
  * What a player sees at a pitch with no signal.
@@ -15,7 +16,7 @@ export const metadata = {
 
 export default function OfflinePage() {
   return (
-    <main id="main" className="mx-auto flex max-w-lg flex-col justify-center px-6 py-20">
+    <PageFrame measure="narrow">
       <h1 className="text-2xl font-semibold tracking-tight">You are offline</h1>
       <p className="mt-3 text-sm text-muted-foreground">
         This page has not been saved to your phone. Anything you have opened before is still
@@ -44,6 +45,6 @@ export default function OfflinePage() {
         Fixtures you have subscribed to are in your phone&rsquo;s calendar and work without a
         connection.
       </p>
-    </main>
+    </PageFrame>
   );
 }

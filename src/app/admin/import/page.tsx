@@ -68,7 +68,7 @@ export default async function AdminImportPage() {
                 <Link href={`/admin/import/${batch.batchId}`} className="font-medium hover:underline">
                   {batch.source}
                 </Link>
-                <span className="tabular-nums text-muted-foreground">
+                <span className="text-muted-foreground">
                   {batch.recordsTotal} records
                 </span>
                 {batch.dryRun ? <StatusPill tone="info">Dry run</StatusPill> : null}

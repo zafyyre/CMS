@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { PageFrame } from '@/components/site/page-frame';
 import { listHonoursBoard } from '@/server/services/competition';
 import { listSeasons } from '@/server/services/directory';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
@@ -36,14 +37,8 @@ export default async function HistoryPage() {
   const personHonours = honours.filter((h) => h.recipientKind === 'PERSON');
 
   return (
-    <main id="main" className="mx-auto max-w-3xl px-6 py-10">
-      <nav className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-        <Link href="/" className="hover:underline">
-          {league.shortName ?? league.slug}
-        </Link>
-      </nav>
-
-      <header className="mt-1 border-b pb-6">
+    <PageFrame>
+      <header className="border-b pb-6">
         <h1 className="text-3xl font-semibold tracking-tight">History</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Every trophy this league awards, and who has won it.
@@ -68,7 +63,7 @@ export default async function HistoryPage() {
           ))}
         </ul>
       </section>
-    </main>
+    </PageFrame>
   );
 }
 
@@ -90,7 +85,7 @@ function HonourSection({
             <div className="flex items-baseline justify-between gap-2">
               <h3 className="font-medium">{honour.name}</h3>
               {honour.establishedYear ? (
-                <span className="text-xs tabular-nums text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   since {honour.establishedYear}
                 </span>
               ) : null}
@@ -103,7 +98,7 @@ function HonourSection({
                 {honour.winners.map((winner, index) => (
                   <li key={`${honour.id}-${index}`} className="flex justify-between gap-3">
                     <span>{winner.recipient}</span>
-                    <span className="tabular-nums text-muted-foreground">
+                    <span className="text-muted-foreground">
                       {winner.value !== null ? `${winner.value} · ` : ''}
                       {winner.awardedOn?.slice(0, 4) ?? ''}
                     </span>

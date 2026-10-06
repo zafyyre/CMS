@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { PageFrame } from '@/components/site/page-frame';
 import { serializeJsonLd } from '@/lib/json-ld';
 import { getClubBySlug } from '@/server/services/directory';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
@@ -59,7 +60,7 @@ export default async function ClubPage({ params }: PageProps) {
   };
 
   return (
-    <main id="main" className="mx-auto max-w-3xl px-6 py-10">
+    <PageFrame>
       <script
         type="application/ld+json"
         // Escaped for a script context, NOT plain JSON.stringify — a club name
@@ -68,11 +69,10 @@ export default async function ClubPage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
 
-      <nav className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-        <Link href="/" className="hover:underline">
-          {league.shortName ?? league.slug}
-        </Link>
-        <span aria-hidden="true"> / </span>
+      <nav
+        aria-label="Breadcrumb"
+        className="text-xs font-medium uppercase tracking-widest text-muted-foreground"
+      >
         <Link href="/clubs" className="hover:underline">
           Clubs
         </Link>
@@ -81,8 +81,8 @@ export default async function ClubPage({ params }: PageProps) {
       <header className="mt-1 border-b pb-6">
         <h1 className="text-3xl font-semibold tracking-tight">{club.name}</h1>
         <div className="mt-2 flex flex-wrap gap-3 text-sm text-muted-foreground">
-          {club.foundedYear ? <span className="tabular-nums">Founded {club.foundedYear}</span> : null}
-          <span className="tabular-nums">
+          {club.foundedYear ? <span>Founded {club.foundedYear}</span> : null}
+          <span>
             {club.teams.length} {club.teams.length === 1 ? 'side' : 'sides'}
           </span>
         </div>
@@ -114,6 +114,6 @@ export default async function ClubPage({ params }: PageProps) {
           </ul>
         )}
       </section>
-    </main>
+    </PageFrame>
   );
 }

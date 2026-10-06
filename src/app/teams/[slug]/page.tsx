@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { PageFrame } from '@/components/site/page-frame';
 import { StatusPill } from '@/components/status-pill';
 import { serializeJsonLd } from '@/lib/json-ld';
 import { formatKickoff } from '@/lib/time';
@@ -71,7 +72,7 @@ export default async function TeamPage({ params }: PageProps) {
   };
 
   return (
-    <main id="main" className="mx-auto max-w-3xl px-6 py-10">
+    <PageFrame>
       <script
         type="application/ld+json"
         // Escaped for a script context. See src/lib/json-ld.ts — plain
@@ -79,11 +80,10 @@ export default async function TeamPage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
 
-      <nav className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-        <Link href="/" className="hover:underline">
-          {league.shortName ?? league.slug}
-        </Link>
-        <span aria-hidden="true"> / </span>
+      <nav
+        aria-label="Breadcrumb"
+        className="text-xs font-medium uppercase tracking-widest text-muted-foreground"
+      >
         <Link href={`/clubs/${team.club.slug}`} className="hover:underline">
           {team.club.name}
         </Link>
@@ -151,14 +151,14 @@ export default async function TeamPage({ params }: PageProps) {
         teamEntryId={currentEntry?.entryId}
         emptyMessage="No matches played yet."
       />
-    </main>
+    </PageFrame>
   );
 }
 
 function Stat({ label, value }: { label: string; value: number | string }) {
   return (
     <div>
-      <div className="text-2xl font-semibold tabular-nums">{value}</div>
+      <div className="text-2xl font-semibold">{value}</div>
       <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
     </div>
   );
@@ -197,11 +197,11 @@ function FixtureList({
                   {atHome ? 'Home' : 'Away'}
                 </span>
                 <span className="font-medium">{opponent ?? 'To be confirmed'}</span>
-                <span className="ml-auto text-sm tabular-nums text-muted-foreground">
+                <span className="ml-auto text-sm text-muted-foreground">
                   {fixture.kickoffAt ? formatKickoff(fixture.kickoffAt, timezone) : 'Date to be confirmed'}
                 </span>
                 {scoreline && fixture.result.state === 'CONFIRMED' ? (
-                  <span className="w-full text-sm font-medium tabular-nums sm:w-auto">
+                  <span className="w-full text-sm font-medium sm:w-auto">
                     {atHome
                       ? `${scoreline.homeScore ?? '–'}–${scoreline.awayScore ?? '–'}`
                       : `${scoreline.awayScore ?? '–'}–${scoreline.homeScore ?? '–'}`}

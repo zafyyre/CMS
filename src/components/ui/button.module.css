@@ -1,0 +1,47 @@
+/*
+ * Buttons — values taken exactly from the reference design. The base is the
+ * design's default button: a white pill with a strong border.
+ */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--input);
+  background: var(--card);
+  color: var(--foreground);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+}
+
+.button:hover {
+  border-color: var(--brand-500);
+  color: var(--brand-700);
+}
+
+.primary {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+}
+
+.primary:hover {
+  background: var(--brand-600);
+  color: var(--primary-foreground);
+}
+
+.highlight {
+  background: var(--highlight);
+  color: var(--highlight-foreground);
+  border-color: var(--highlight);
+}
+
+.small {
+  padding: 7px 12px;
+  font-size: 13px;
+}
