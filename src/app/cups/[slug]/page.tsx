@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { PageFrame } from '@/components/site/page-frame';
 import { StatusPill } from '@/components/status-pill';
+import { PageHeading } from '@/components/ui/page-heading';
 import { formatKickoff } from '@/lib/time';
 import { getCurrentSeason } from '@/server/services/competition';
 import { getEditionBySlugs, listEditionGroups, listSeasons } from '@/server/services/directory';
@@ -67,10 +68,7 @@ export default async function CupPage({ params, searchParams }: PageProps) {
 
   return (
     <PageFrame>
-      <header className="border-b pb-6">
-        <h1 className="text-3xl font-semibold tracking-tight">{edition.name}</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{season.name}</p>
-      </header>
+      <PageHeading title={edition.name} description={season.name} />
 
       <nav aria-label="Season" className="mt-6 flex flex-wrap gap-2">
         {seasons.map((s) => (

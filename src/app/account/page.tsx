@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { EnrolTwoFactor } from '@/components/auth/enrol-two-factor';
 import { PageFrame } from '@/components/site/page-frame';
 import { StatusPill } from '@/components/status-pill';
+import { PageHeading } from '@/components/ui/page-heading';
 import { auth } from '@/server/auth';
 import { getPrincipal } from '@/server/auth/principal';
 import { principalRequiresMfa } from '@/server/authz/roles';
@@ -35,12 +36,7 @@ export default async function AccountPage() {
     <PageFrame measure="prose">
       {/* No Sign out here: the site header carries it on every page (inside
           the menu on a phone), and a second one beside it was a duplicate. */}
-      <header className="flex flex-wrap items-start justify-between gap-4 border-b pb-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{session?.user.name}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{session?.user.email}</p>
-        </div>
-      </header>
+      <PageHeading title={session?.user.name} description={session?.user.email} />
 
       <section className="mt-8">
         <h2 className="text-lg font-medium">What you can do here</h2>

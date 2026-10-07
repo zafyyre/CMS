@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ActionForm } from '@/components/admin/action-form';
 import { StatusPill } from '@/components/status-pill';
+import { PageHeading } from '@/components/ui/page-heading';
 import { getPrincipal } from '@/server/auth/principal';
 import { getCurrentSeason, listCompetitions } from '@/server/services/competition';
 import { listFixtures } from '@/server/services/fixtures';
@@ -52,10 +53,7 @@ export default async function AdminOverviewPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {season ? season.name : 'No season is running'}
-      </p>
+      <PageHeading title="Overview" description={season ? season.name : 'No season is running'} />
 
       <section className="mt-8 grid gap-4 sm:grid-cols-3">
         <Card

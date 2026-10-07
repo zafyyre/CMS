@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { PageFrame } from '@/components/site/page-frame';
+import { PageHeading } from '@/components/ui/page-heading';
 
 /**
  * What a player sees at a pitch with no signal.
@@ -17,11 +18,15 @@ export const metadata = {
 export default function OfflinePage() {
   return (
     <PageFrame measure="narrow">
-      <h1 className="text-2xl font-semibold tracking-tight">You are offline</h1>
-      <p className="mt-3 text-sm text-muted-foreground">
-        This page has not been saved to your phone. Anything you have opened before is still
-        available.
-      </p>
+      <PageHeading
+        title="You are offline"
+        description={
+          <>
+            This page has not been saved to your phone. Anything you have opened before is
+            still available.
+          </>
+        }
+      />
 
       <ul className="mt-6 space-y-2 text-sm">
         <li>
