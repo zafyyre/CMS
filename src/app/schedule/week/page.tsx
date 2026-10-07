@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { PageFrame } from '@/components/site/page-frame';
 import { StatusPill } from '@/components/status-pill';
+import { PageHeading } from '@/components/ui/page-heading';
 import { formatKickoffTime, leagueDateKey, leagueDayBounds } from '@/lib/time';
 import { type FixtureView, listFixtures } from '@/server/services/fixtures';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
@@ -63,14 +64,12 @@ export default async function ScheduleWeekPage({ searchParams }: PageProps) {
         </Link>
       </nav>
 
-      <header className="mt-1 border-b pb-6">
-        <h1 className="text-3xl font-semibold tracking-tight">
-          Week of {longDate(monday)}
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {fixtures.length} {fixtures.length === 1 ? 'match' : 'matches'}
-        </p>
-      </header>
+      <div className="mt-1">
+        <PageHeading
+          title={`Week of ${longDate(monday)}`}
+          description={`${fixtures.length} ${fixtures.length === 1 ? 'match' : 'matches'}`}
+        />
+      </div>
 
       <nav aria-label="Week" className="mt-6 flex flex-wrap gap-3 text-sm">
         <Link href={`/schedule/week?from=${previousMonday}`} className="underline underline-offset-4">
