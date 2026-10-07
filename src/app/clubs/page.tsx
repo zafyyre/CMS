@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { PageFrame } from '@/components/site/page-frame';
+import { PageHeading } from '@/components/ui/page-heading';
 import { listClubs } from '@/server/services/competition';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
 
@@ -52,10 +53,10 @@ export default async function ClubsPage({ searchParams }: { searchParams: ClubsS
 
   return (
     <PageFrame>
-      <header className="border-b pb-6">
-        <h1 className="text-3xl font-semibold tracking-tight">Clubs</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {query ? (
+      <PageHeading
+        title="Clubs"
+        description={
+          query ? (
             <>
               {clubs.length} {clubs.length === 1 ? 'club' : 'clubs'} matching “{query}” ·{' '}
               <Link href="/clubs" className="underline">
@@ -66,9 +67,9 @@ export default async function ClubsPage({ searchParams }: { searchParams: ClubsS
             <>
               {clubs.length} clubs, {clubs.reduce((sum, c) => sum + c.teamCount, 0)} sides
             </>
-          )}
-        </p>
-      </header>
+          )
+        }
+      />
 
       {query && clubs.length === 0 ? (
         <p className="mt-8 text-sm text-muted-foreground">No club’s name contains “{query}”.</p>
