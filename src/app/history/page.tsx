@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { PageFrame } from '@/components/site/page-frame';
+import { PageHeading } from '@/components/ui/page-heading';
 import { listHonoursBoard } from '@/server/services/competition';
 import { listSeasons } from '@/server/services/directory';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
@@ -38,12 +39,10 @@ export default async function HistoryPage() {
 
   return (
     <PageFrame>
-      <header className="border-b pb-6">
-        <h1 className="text-3xl font-semibold tracking-tight">History</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Every trophy this league awards, and who has won it.
-        </p>
-      </header>
+      <PageHeading
+        title="History"
+        description="Every trophy this league awards, and who has won it."
+      />
 
       <HonourSection title="Team trophies" honours={teamHonours} />
       <HonourSection title="Individual awards" honours={personHonours} />
