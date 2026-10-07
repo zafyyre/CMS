@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { PageFrame } from '@/components/site/page-frame';
+import { PageHeading } from '@/components/ui/page-heading';
 import { serializeJsonLd } from '@/lib/json-ld';
 import { getClubBySlug } from '@/server/services/directory';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
@@ -78,15 +79,19 @@ export default async function ClubPage({ params }: PageProps) {
         </Link>
       </nav>
 
-      <header className="mt-1 border-b pb-6">
-        <h1 className="text-3xl font-semibold tracking-tight">{club.name}</h1>
-        <div className="mt-2 flex flex-wrap gap-3 text-sm text-muted-foreground">
-          {club.foundedYear ? <span>Founded {club.foundedYear}</span> : null}
-          <span>
-            {club.teams.length} {club.teams.length === 1 ? 'side' : 'sides'}
-          </span>
-        </div>
-      </header>
+      <div className="mt-1">
+        <PageHeading
+          title={club.name}
+          description={
+            <span className="flex flex-wrap gap-3">
+              {club.foundedYear ? <span>Founded {club.foundedYear}</span> : null}
+              <span>
+                {club.teams.length} {club.teams.length === 1 ? 'side' : 'sides'}
+              </span>
+            </span>
+          }
+        />
+      </div>
 
       <section className="mt-8">
         <h2 className="text-lg font-medium">Teams</h2>
