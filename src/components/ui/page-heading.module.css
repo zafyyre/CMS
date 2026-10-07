@@ -1,0 +1,40 @@
+/*
+ * A page's title block — values taken exactly from the reference design's page
+ * header. Tailwind's reset removes heading and paragraph margins, and the base
+ * layer sizes an <h1> at 2em, so every value the reference relies on is set
+ * here explicitly. Line-height, weight and the zero heading margin come from
+ * the base layer, which already matches the reference's heading rule.
+ */
+
+.root {
+  margin-bottom: 22px;
+}
+
+/* The small uppercase line above the title. Inline-block, as in the
+   reference, so its bottom margin applies and the title starts below it. */
+.overline {
+  display: inline-block;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--brand-600);
+}
+
+.title {
+  font-size: 30px;
+  letter-spacing: -0.02em;
+}
+
+.description {
+  margin: 8px 0 0;
+  max-width: 70ch;
+  color: var(--muted-foreground);
+}
+
+@media (max-width: 720px) {
+  .title {
+    font-size: 24px;
+  }
+}

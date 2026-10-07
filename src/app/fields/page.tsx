@@ -1,5 +1,6 @@
 import { PageFrame } from '@/components/site/page-frame';
 import { StatusPill } from '@/components/status-pill';
+import { PageHeading } from '@/components/ui/page-heading';
 import { formatKickoff } from '@/lib/time';
 import { listVenues, type VenueSummary } from '@/server/services/venues';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
@@ -44,18 +45,18 @@ export default async function FieldsPage() {
 
   return (
     <PageFrame>
-      <header className="border-b pb-6">
-        <h1 className="text-3xl font-semibold tracking-tight">Fields</h1>
-        <div className="mt-3">
-          {closed.length === 0 ? (
+      <PageHeading
+        title="Fields"
+        description={
+          closed.length === 0 ? (
             <StatusPill tone="positive">All grounds open</StatusPill>
           ) : (
             <StatusPill tone="caution">
               {closed.length === 1 ? '1 ground closed' : `${closed.length} grounds closed`}
             </StatusPill>
-          )}
-        </div>
-      </header>
+          )
+        }
+      />
 
       {closed.length > 0 ? (
         <section className="mt-8 rounded-lg border border-status-caution/40 bg-status-caution-bg/40 p-4">

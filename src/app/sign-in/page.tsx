@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { SignInForm } from '@/components/auth/sign-in-form';
 import { PageFrame } from '@/components/site/page-frame';
+import { PageHeading } from '@/components/ui/page-heading';
 import { safeNext } from '@/lib/safe-next';
 import { getPrincipal } from '@/server/auth/principal';
 
@@ -32,10 +33,10 @@ export default async function SignInPage({ searchParams }: PageProps) {
 
   return (
     <PageFrame measure="form">
-      <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        For club officials, referees and league staff. The public pages need no account.
-      </p>
+      <PageHeading
+        title="Sign in"
+        description="For club officials, referees and league staff. The public pages need no account."
+      />
 
       <SignInForm next={safeNext(next)} />
     </PageFrame>

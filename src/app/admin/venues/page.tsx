@@ -1,5 +1,6 @@
 import { ActionForm, Field, inputClass } from '@/components/admin/action-form';
 import { StatusPill } from '@/components/status-pill';
+import { PageHeading } from '@/components/ui/page-heading';
 import { formatKickoff } from '@/lib/time';
 import { listClosuresInForce, listVenues } from '@/server/services/venues';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
@@ -32,10 +33,14 @@ export default async function AdminVenuesPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold tracking-tight">Venues</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {venues.length} grounds · {closures.length} closed right now
-      </p>
+      <PageHeading
+        title="Venues"
+        description={
+          <>
+            {venues.length} grounds · {closures.length} closed right now
+          </>
+        }
+      />
 
       <div className="mt-8 grid gap-8 lg:grid-cols-2">
         <section className="rounded-lg border p-5">
