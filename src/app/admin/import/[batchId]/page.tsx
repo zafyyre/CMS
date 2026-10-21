@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ActionForm, Field, inputClass } from '@/components/admin/action-form';
 import { StatusPill } from '@/components/status-pill';
+import { PageHeading } from '@/components/ui/page-heading';
 import { checkImportedStandings, getBatch, listReviewQueue } from '@/server/services/import';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
 import { confirmMatchAction, promoteImportAction, rejectMatchAction } from '../../actions';
@@ -54,16 +55,20 @@ export default async function ImportReviewPage({ params }: PageProps) {
         </Link>
       </nav>
 
-      <header className="mt-1 border-b pb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">{batch.source}</h1>
-        <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-          <span>{batch.recordsTotal} records</span>
-          <span>{batch.recordsMatched} matched</span>
-          <span>{batch.recordsNeedingReview} awaiting a decision</span>
-          {batch.dryRun ? <StatusPill tone="info">Dry run</StatusPill> : null}
-          {batch.status === 'PROMOTED' ? <StatusPill tone="positive">Promoted</StatusPill> : null}
-        </div>
-      </header>
+      <div className="mt-1">
+        <PageHeading
+          title={batch.source}
+          description={
+            <span className="flex flex-wrap items-center gap-3">
+              <span>{batch.recordsTotal} records</span>
+              <span>{batch.recordsMatched} matched</span>
+              <span>{batch.recordsNeedingReview} awaiting a decision</span>
+              {batch.dryRun ? <StatusPill tone="info">Dry run</StatusPill> : null}
+              {batch.status === 'PROMOTED' ? <StatusPill tone="positive">Promoted</StatusPill> : null}
+            </span>
+          }
+        />
+      </div>
 
       {queue.length === 0 ? (
         <section className="mt-8 rounded-lg border p-5">
