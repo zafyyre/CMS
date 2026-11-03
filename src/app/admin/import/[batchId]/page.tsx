@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ActionForm, Field, inputClass } from '@/components/admin/action-form';
 import { StatusPill } from '@/components/status-pill';
+import { cardClass } from '@/components/ui/card';
 import { PageHeading } from '@/components/ui/page-heading';
 import { checkImportedStandings, getBatch, listReviewQueue } from '@/server/services/import';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
@@ -71,7 +72,7 @@ export default async function ImportReviewPage({ params }: PageProps) {
       </div>
 
       {queue.length === 0 ? (
-        <section className="mt-8 rounded-lg border p-5">
+        <section className={cardClass({ padded: true, className: 'mt-8' })}>
           <h2 className="text-lg font-medium">Nothing left to decide</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {batch.status === 'PROMOTED'
@@ -96,7 +97,7 @@ export default async function ImportReviewPage({ params }: PageProps) {
 
           <ul className="mt-4 space-y-4">
             {queue.map((item) => (
-              <li key={item.recordId} className="rounded-lg border p-5">
+              <li key={item.recordId} className={cardClass({ padded: true })}>
                 <div className="flex flex-wrap items-baseline gap-3">
                   <span className="text-xs uppercase tracking-wide text-muted-foreground">
                     {item.entityKind.toLowerCase()}
@@ -155,7 +156,7 @@ export default async function ImportReviewPage({ params }: PageProps) {
 
           <ul className="mt-4 space-y-3">
             {checks.map((check, index) => (
-              <li key={`${check.competitionKey}-${index}`} className="rounded-lg border p-5">
+              <li key={`${check.competitionKey}-${index}`} className={cardClass({ padded: true })}>
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="font-medium">{check.competitionKey}</span>
                   {check.groupKey ? (

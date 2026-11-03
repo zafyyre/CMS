@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ActionForm, Field, inputClass } from '@/components/admin/action-form';
 import { StatusPill } from '@/components/status-pill';
+import { cardClass } from '@/components/ui/card';
 import { PageHeading } from '@/components/ui/page-heading';
 import { formatKickoff } from '@/lib/time';
 import { getCurrentSeason } from '@/server/services/competition';
@@ -39,7 +40,7 @@ export default async function AdminFixturesPage() {
         }
       />
 
-      <section className="mt-8 rounded-lg border p-5">
+      <section className={cardClass({ padded: true, className: 'mt-8' })}>
         <h2 className="text-lg font-medium">Import a schedule</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Columns: <code className="font-mono text-xs">competition, group, home, away</code> are

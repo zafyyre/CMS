@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ActionForm, Field, inputClass } from '@/components/admin/action-form';
 import { StatusPill } from '@/components/status-pill';
+import { cardClass } from '@/components/ui/card';
 import { PageHeading } from '@/components/ui/page-heading';
 import { formatKickoff, leagueDateKey } from '@/lib/time';
 import { sourceLabel } from '@/server/match/result';
@@ -128,7 +129,7 @@ export default async function AdminFixturePage({ params }: PageProps) {
       </div>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-2">
-        <section className="rounded-lg border p-5">
+        <section className={cardClass({ padded: true })}>
           <h2 className="text-lg font-medium">
             {current ? 'Correct the result' : 'Record the result'}
           </h2>
@@ -186,7 +187,7 @@ export default async function AdminFixturePage({ params }: PageProps) {
           </ActionForm>
         </section>
 
-        <section className="rounded-lg border p-5">
+        <section className={cardClass({ padded: true })}>
           <h2 className="text-lg font-medium">Move or call off</h2>
 
           <ActionForm action={rescheduleFixtureAction} submitLabel="Reschedule">
@@ -250,7 +251,7 @@ export default async function AdminFixturePage({ params }: PageProps) {
         </section>
       </div>
 
-      <section className="mt-10 rounded-lg border p-5">
+      <section className={cardClass({ padded: true, className: 'mt-10' })}>
         <h2 className="text-lg font-medium">Match events</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Goals and cards feed the goalscorer chart and, from Phase 11, discipline. A shootout
