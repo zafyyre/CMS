@@ -1,5 +1,6 @@
 import { TwoFactorForm } from '@/components/auth/two-factor-form';
 import { PageFrame } from '@/components/site/page-frame';
+import { PageHeading } from '@/components/ui/page-heading';
 import { safeNext } from '@/lib/safe-next';
 
 /**
@@ -29,10 +30,10 @@ export default async function TwoFactorPage({ searchParams }: PageProps) {
 
   return (
     <PageFrame measure="form">
-      <h1 className="text-2xl font-semibold tracking-tight">Two-factor authentication</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Enter the six-digit code from your authenticator app.
-      </p>
+      <PageHeading
+        title="Two-factor authentication"
+        description="Enter the six-digit code from your authenticator app."
+      />
 
       <TwoFactorForm next={destination} />
     </PageFrame>

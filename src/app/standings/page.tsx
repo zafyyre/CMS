@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { PageFrame } from '@/components/site/page-frame';
 import { StandingsTable } from '@/components/standings-table';
 import { StatusPill } from '@/components/status-pill';
+import { PageHeading } from '@/components/ui/page-heading';
 import { getCurrentSeason, listCompetitions } from '@/server/services/competition';
 import { getEditionBySlugs, listSeasons } from '@/server/services/directory';
 import { listEditionStandings } from '@/server/services/standings';
@@ -165,9 +166,7 @@ export default async function StandingsPage({ searchParams }: PageProps) {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <PageFrame>
-      <header className="border-b pb-6">
-        <h1 className="text-3xl font-semibold tracking-tight">Standings</h1>
-      </header>
+      <PageHeading title="Standings" />
       {children}
     </PageFrame>
   );

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ActionForm, Field, inputClass } from '@/components/admin/action-form';
 import { StatusPill } from '@/components/status-pill';
+import { PageHeading } from '@/components/ui/page-heading';
 import { listBatches } from '@/server/services/import';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
 import { stageImportAction } from '../actions';
@@ -25,12 +26,16 @@ export default async function AdminImportPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold tracking-tight">Historical import</h1>
-      <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-        Twelve seasons of records are not a parsing problem — they are a naming problem. Across
-        that span teams rename, clubs merge, and the same club appears under three spellings.
-        Nothing here is merged without somebody saying so.
-      </p>
+      <PageHeading
+        title="Historical import"
+        description={
+          <>
+            Twelve seasons of records are not a parsing problem — they are a naming problem.
+            Across that span teams rename, clubs merge, and the same club appears under three
+            spellings. Nothing here is merged without somebody saying so.
+          </>
+        }
+      />
 
       <section className="mt-8 rounded-lg border p-5">
         <h2 className="text-lg font-medium">Stage a file</h2>

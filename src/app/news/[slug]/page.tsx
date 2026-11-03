@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { PageFrame } from '@/components/site/page-frame';
+import { PageHeading } from '@/components/ui/page-heading';
 import { formatKickoff } from '@/lib/time';
 import { getArticleBySlug } from '@/server/services/content';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
@@ -55,16 +56,22 @@ export default async function ArticlePage({ params }: PageProps) {
       </nav>
 
       <article className="mt-1">
-        <header className="border-b pb-6">
-          <h1 className="text-3xl font-semibold tracking-tight">{article.title}</h1>
-          <div className="mt-2 flex flex-wrap gap-3 text-sm text-muted-foreground">
-            {article.publishedAt ? (
-              <time dateTime={article.publishedAt.toISOString()}>
-                {formatKickoff(article.publishedAt, league.timezone, { withZone: false })}
-              </time>
-            ) : null}
-            {article.authorName ? <span>{article.authorName}</span> : null}
-          </div>
+        <header>
+          <PageHeading
+            title={article.title}
+            description={
+              article.publishedAt || article.authorName ? (
+                <span className="flex flex-wrap gap-3">
+                  {article.publishedAt ? (
+                    <time dateTime={article.publishedAt.toISOString()}>
+                      {formatKickoff(article.publishedAt, league.timezone, { withZone: false })}
+                    </time>
+                  ) : null}
+                  {article.authorName ? <span>{article.authorName}</span> : null}
+                </span>
+              ) : undefined
+            }
+          />
         </header>
 
         {/* Split on blank lines and rendered as text nodes. React escapes each

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { PageFrame } from '@/components/site/page-frame';
 import { StatusPill, type StatusTone } from '@/components/status-pill';
+import { PageHeading } from '@/components/ui/page-heading';
 import { formatKickoffTime, leagueDateKey } from '@/lib/time';
 import { getCurrentSeason } from '@/server/services/competition';
 import { type FixtureStatus, type FixtureView, listFixtures } from '@/server/services/fixtures';
@@ -63,14 +64,16 @@ export default async function SchedulePage() {
 
   return (
     <PageFrame>
-      <header className="border-b pb-6">
-        <h1 className="text-3xl font-semibold tracking-tight">Schedule</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {season ? season.name : 'No season configured'} · all times{' '}
-          {/* Naming the zone matters most on the two weekends it changes. */}
-          <span className="font-medium">{league.timezone.replace('_', ' ')}</span>
-        </p>
-      </header>
+      <PageHeading
+        title="Schedule"
+        description={
+          <>
+            {season ? season.name : 'No season configured'} · all times{' '}
+            {/* Naming the zone matters most on the two weekends it changes. */}
+            <span className="font-medium">{league.timezone.replace('_', ' ')}</span>
+          </>
+        }
+      />
 
       {closures.length > 0 ? (
         /**

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ActionForm, Field, inputClass } from '@/components/admin/action-form';
 import { StatusPill } from '@/components/status-pill';
+import { PageHeading } from '@/components/ui/page-heading';
 import { formatKickoff, leagueDateKey } from '@/lib/time';
 import { sourceLabel } from '@/server/match/result';
 import { getFixture, listFixtureChanges } from '@/server/services/fixtures';
@@ -105,24 +106,26 @@ export default async function AdminFixturePage({ params }: PageProps) {
         </Link>
       </nav>
 
-      <header className="mt-1 border-b pb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {fixture.homeTeamName ?? 'To be confirmed'} v {fixture.awayTeamName ?? 'To be confirmed'}
-        </h1>
-        <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-          <span>{fixture.competitionName}</span>
-          <span>
-            {fixture.kickoffAt
-              ? formatKickoff(fixture.kickoffAt, league.timezone)
-              : 'Date to be confirmed'}
-          </span>
-          {fixture.venueName ? <span>{fixture.venueName}</span> : null}
-          <StatusPill tone={fixture.status === 'PLAYED' ? 'positive' : 'info'}>
-            {fixture.status.toLowerCase()}
-          </StatusPill>
-        </div>
+      <div className="mt-1">
+        <PageHeading
+          title={`${fixture.homeTeamName ?? 'To be confirmed'} v ${fixture.awayTeamName ?? 'To be confirmed'}`}
+          description={
+            <span className="flex flex-wrap items-center gap-3">
+              <span>{fixture.competitionName}</span>
+              <span>
+                {fixture.kickoffAt
+                  ? formatKickoff(fixture.kickoffAt, league.timezone)
+                  : 'Date to be confirmed'}
+              </span>
+              {fixture.venueName ? <span>{fixture.venueName}</span> : null}
+              <StatusPill tone={fixture.status === 'PLAYED' ? 'positive' : 'info'}>
+                {fixture.status.toLowerCase()}
+              </StatusPill>
+            </span>
+          }
+        />
         <p className="mt-2 text-sm">{fixture.result.basis}</p>
-      </header>
+      </div>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-2">
         <section className="rounded-lg border p-5">

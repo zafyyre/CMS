@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ActionForm, Field, inputClass } from '@/components/admin/action-form';
 import { StatusPill } from '@/components/status-pill';
+import { PageHeading } from '@/components/ui/page-heading';
 import { formatKickoff } from '@/lib/time';
 import { getCurrentSeason } from '@/server/services/competition';
 import { listFixtures } from '@/server/services/fixtures';
@@ -29,10 +30,14 @@ export default async function AdminFixturesPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold tracking-tight">Fixtures</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {season ? season.name : 'No season is running'} · {fixtures.length} scheduled
-      </p>
+      <PageHeading
+        title="Fixtures"
+        description={
+          <>
+            {season ? season.name : 'No season is running'} · {fixtures.length} scheduled
+          </>
+        }
+      />
 
       <section className="mt-8 rounded-lg border p-5">
         <h2 className="text-lg font-medium">Import a schedule</h2>

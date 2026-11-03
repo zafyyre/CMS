@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { PageFrame } from '@/components/site/page-frame';
+import { PageHeading } from '@/components/ui/page-heading';
 import { type DocumentSummary, listDocuments } from '@/server/services/content';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
 
@@ -26,12 +27,10 @@ export default async function DocumentsPage() {
 
   return (
     <PageFrame>
-      <header className="border-b pb-6">
-        <h1 className="text-3xl font-semibold tracking-tight">Documents</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Rules, the constitution, fine schedules and registration forms.
-        </p>
-      </header>
+      <PageHeading
+        title="Documents"
+        description="Rules, the constitution, fine schedules and registration forms."
+      />
 
       {grouped.length === 0 ? (
         <p className="mt-10 text-sm text-muted-foreground">

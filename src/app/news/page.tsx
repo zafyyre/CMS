@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { PageFrame } from '@/components/site/page-frame';
+import { PageHeading } from '@/components/ui/page-heading';
 import { formatKickoff } from '@/lib/time';
 import { type ArticleKind, listArticles } from '@/server/services/content';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
@@ -40,12 +41,10 @@ export default async function NewsPage({ searchParams }: PageProps) {
 
   return (
     <PageFrame>
-      <header className="border-b pb-6">
-        <h1 className="text-3xl font-semibold tracking-tight">News</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Announcements, the notice board and weekly reports.
-        </p>
-      </header>
+      <PageHeading
+        title="News"
+        description="Announcements, the notice board and weekly reports."
+      />
 
       <nav aria-label="Filter" className="mt-6 flex flex-wrap gap-2">
         <Link
