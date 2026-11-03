@@ -1,5 +1,6 @@
 import { ActionForm, Field, inputClass } from '@/components/admin/action-form';
 import { StatusPill } from '@/components/status-pill';
+import { cardClass } from '@/components/ui/card';
 import { PageHeading } from '@/components/ui/page-heading';
 import { formatKickoff } from '@/lib/time';
 import { listClosuresInForce, listVenues } from '@/server/services/venues';
@@ -43,7 +44,7 @@ export default async function AdminVenuesPage() {
       />
 
       <div className="mt-8 grid gap-8 lg:grid-cols-2">
-        <section className="rounded-lg border p-5">
+        <section className={cardClass({ padded: true })}>
           <h2 className="text-lg font-medium">Close a ground</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Appears on the front page, the schedule and the field-status page straight away.
@@ -84,7 +85,7 @@ export default async function AdminVenuesPage() {
           </ActionForm>
         </section>
 
-        <section className="rounded-lg border p-5">
+        <section className={cardClass({ padded: true })}>
           <h2 className="text-lg font-medium">Add a ground</h2>
           <ActionForm action={createVenueAction} submitLabel="Add">
             <Field label="Name" name="name">

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { PageFrame } from '@/components/site/page-frame';
+import { cardClass } from '@/components/ui/card';
 import { PageHeading } from '@/components/ui/page-heading';
 import { formatKickoff } from '@/lib/time';
 import { type ArticleKind, listArticles } from '@/server/services/content';
@@ -71,7 +72,7 @@ export default async function NewsPage({ searchParams }: PageProps) {
       ) : (
         <ul className="mt-8 space-y-4">
           {articles.map((article) => (
-            <li key={article.id} className="rounded-lg border p-5">
+            <li key={article.id} className={cardClass({ padded: true })}>
               <div className="flex flex-wrap items-baseline gap-3">
                 <span className="text-xs uppercase tracking-wide text-muted-foreground">
                   {KIND_LABELS[article.kind]}
