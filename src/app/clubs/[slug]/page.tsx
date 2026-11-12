@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { PageFrame } from '@/components/site/page-frame';
+import { cardClass } from '@/components/ui/card';
 import { PageHeading } from '@/components/ui/page-heading';
 import { serializeJsonLd } from '@/lib/json-ld';
 import { getClubBySlug } from '@/server/services/directory';
@@ -102,7 +103,7 @@ export default async function ClubPage({ params }: PageProps) {
         ) : (
           <ul className="mt-3 grid gap-2">
             {club.teams.map((team) => (
-              <li key={team.id} className="rounded-lg border px-4 py-3">
+              <li key={team.id} className={cardClass({ className: 'px-4 py-3' })}>
                 <Link href={`/teams/${team.slug}`} className="font-medium hover:underline">
                   {team.name}
                 </Link>

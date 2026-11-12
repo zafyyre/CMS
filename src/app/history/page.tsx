@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { PageFrame } from '@/components/site/page-frame';
+import { cardClass } from '@/components/ui/card';
 import { PageHeading } from '@/components/ui/page-heading';
 import { listHonoursBoard } from '@/server/services/competition';
 import { listSeasons } from '@/server/services/directory';
@@ -51,7 +52,7 @@ export default async function HistoryPage() {
         <h2 className="text-lg font-medium">Seasons</h2>
         <ul className="mt-3 grid gap-2 sm:grid-cols-2">
           {[...seasons].reverse().map((season) => (
-            <li key={season.id} className="rounded-lg border px-4 py-3 text-sm">
+            <li key={season.id} className={cardClass({ className: 'px-4 py-3 text-sm' })}>
               <Link href={`/standings?season=${season.slug}`} className="font-medium hover:underline">
                 {season.name}
               </Link>
@@ -80,7 +81,7 @@ function HonourSection({
       <h2 className="text-lg font-medium">{title}</h2>
       <div className="mt-3 grid gap-4 sm:grid-cols-2">
         {honours.map((honour) => (
-          <article key={honour.id} className="rounded-lg border p-4">
+          <article key={honour.id} className={cardClass({ className: 'p-4' })}>
             <div className="flex items-baseline justify-between gap-2">
               <h3 className="font-medium">{honour.name}</h3>
               {honour.establishedYear ? (

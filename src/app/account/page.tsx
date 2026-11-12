@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { EnrolTwoFactor } from '@/components/auth/enrol-two-factor';
 import { PageFrame } from '@/components/site/page-frame';
 import { StatusPill } from '@/components/status-pill';
+import { cardClass } from '@/components/ui/card';
 import { PageHeading } from '@/components/ui/page-heading';
 import { auth } from '@/server/auth';
 import { getPrincipal } from '@/server/auth/principal';
@@ -48,7 +49,7 @@ export default async function AccountPage() {
         ) : (
           <ul className="mt-3 space-y-2 text-sm">
             {principal.roles.map((role, index) => (
-              <li key={`${role.role}-${index}`} className="rounded-lg border px-4 py-3">
+              <li key={`${role.role}-${index}`} className={cardClass({ className: 'px-4 py-3' })}>
                 <span className="font-medium">{humanRole(role.role)}</span>{' '}
                 <span className="text-muted-foreground">
                   {/* The space is a real character, not a margin. A screen

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { PageFrame } from '@/components/site/page-frame';
+import { cardClass } from '@/components/ui/card';
 import { PageHeading } from '@/components/ui/page-heading';
 import { listClubs } from '@/server/services/competition';
 import { getCurrentLeague } from '@/server/tenancy/current-league';
@@ -77,7 +78,7 @@ export default async function ClubsPage({ searchParams }: { searchParams: ClubsS
 
       <ul className="mt-8 grid gap-2 sm:grid-cols-2">
         {clubs.map((club) => (
-          <li key={club.id} className="rounded-lg border px-4 py-3">
+          <li key={club.id} className={cardClass({ className: 'px-4 py-3' })}>
             <Link href={`/clubs/${club.slug}`} className="font-medium hover:underline">
               {club.name}
             </Link>
